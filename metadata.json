@@ -1,0 +1,10 @@
+{
+  "name": "Content Machine",
+  "description": "AI-powered viral content analyzer, script remake engine and copywriter driven entirely by a user-defined Brand DNA. Multi-brand, no vendor lock-in.",
+  "requestFramePermissions": [
+    "display-capture"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
