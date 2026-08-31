@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node server/production.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test services/radar/radar.test.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",

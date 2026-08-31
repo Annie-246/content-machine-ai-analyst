@@ -8,8 +8,13 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const apiKey = env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
 
-    // Expose optional yt-dlp settings from .env.local to the server-side plugin.
-    for (const key of ['YTDLP_PATH', 'YTDLP_COOKIES_FROM_BROWSER', 'YTDLP_COOKIES_FILE']) {
+    // Hand server-only settings from .env.local to the API plugin. These are
+    // read through process.env inside server/, never through `define`, so they
+    // stay out of the browser bundle.
+    for (const key of [
+      'YTDLP_PATH', 'YTDLP_COOKIES_FROM_BROWSER', 'YTDLP_COOKIES_FILE',
+      'APIFY_API_TOKEN', 'TIKHUB_API_KEY', 'RADAR_DOUYIN_SEARCH_ACTOR', 'RADAR_DOUYIN_PROFILE_ACTOR',
+    ]) {
       if (env[key]) process.env[key] = env[key];
     }
 

@@ -65,6 +65,13 @@ export interface FileData {
   url?: string;
   // Set when the source was pulled from a social link and uploaded to the Gemini Files API.
   fileUri?: string;
+  // Real text read out of a link that holds no video - a Facebook or X text
+  // post, a blog article. Sent to the model instead of asking it to guess.
+  sourceText?: string;
+  sourceTitle?: string;
+  // Photos that came with the post. Creators often put the real message on the
+  // image, so the caption alone is only half the story.
+  sourceImages?: { base64: string; mimeType: string }[];
   videoMeta?: VideoMeta;
 }
 
@@ -85,3 +92,77 @@ export const FORMULA_LABELS: Record<ScriptFormula, string> = {
   before_after: '🔄 Before - After (Trước & Sau khi trải nghiệm)',
   hero_journey: '🚀 Hero Journey (Hành trình vượt khó & Đột phá)'
 };
+
+// ---------------------------------------------------------------------------
+// Content Radar
+//
+// Mirrors the RadarContent JSDoc contract in server/radar/providers/types.mjs.
+// Note the absence of `views`: Douyin reports playCount = 0 on every search
+// row, so the Radar never claims a view count it does not have.
+
+export type RadarPlatform = 'douyin';
+export type RadarSortMode = 'recommended' | 'engagement' | 'latest';
+export type RadarTimeWindow = '24h' | '72h' | '7d' | '14d' | '28d';
+export type RadarMode = 'keyword' | 'creator';
+
+export interface RadarCreatorRef {
+  id: string | null;
+  username: string | null;
+  nickname: string | null;
+  followerCount: number | null;
+  avatarUrl: string | null;
+  profileUrl: string | null;
+}
+
+export interface RadarContent {
+  id: string;
+  platform: RadarPlatform;
+  caption: string | null;
+  publishedAt: string | null;
+  creator: RadarCreatorRef;
+  metrics: {
+    likes: number;
+    comments: number;
+    shares: number;
+    collects: number | null;
+  };
+  thumbnailUrl: string | null;
+  videoUrl: string;
+  hashtags: string[];
+  duration: number | null;
+  isAd: boolean | null;
+  radarScore: number;
+  radarSignals: {
+    likeFollowerRatio: number | null;
+    shareFollowerRatio: number | null;
+  };
+}
+
+/** One creator offered for selection in competitor mode. */
+export interface RadarCreatorCandidate extends RadarCreatorRef {
+  ref: string;
+}
+
+/** A creator rolled up from the rows already on screen - never a fresh crawl. */
+export interface RadarCreatorSummary extends RadarCreatorRef {
+  key: string;
+  contentCount: number;
+  totalLikes: number;
+  totalShares: number;
+  averageLikes: number;
+  bestRadarScore: number;
+  bestContent: RadarContent | null;
+}
+
+export interface RadarScanResult {
+  mode: RadarMode;
+  platform: RadarPlatform;
+  query: { original: string; effective: string; translated: boolean };
+  timeWindow: RadarTimeWindow;
+  limit: number;
+  sort: RadarSortMode;
+  /** Rows the provider billed us for, before the local time filter. */
+  fetchedCount: number;
+  items: RadarContent[];
+  cached: boolean;
+}

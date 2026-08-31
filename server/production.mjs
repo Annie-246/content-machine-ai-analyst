@@ -7,8 +7,9 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  handleFetchVideo, handleLlm, handleGemini, sendJson,
+  handleFetchVideo, handleFetchSource, handleLlm, handleGemini, sendJson,
   applyCors, checkAccess, handlePreflight, serverInfo,
+  handleRadarSearch, handleRadarCreators, handleRadarCreatorVideos, handleRadarSuggest,
 } from './handlers.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,8 +63,13 @@ const server = createServer(async (req, res) => {
     }
 
     if (pathname === '/api/fetch-video') return await handleFetchVideo(req, res, FALLBACK_KEY);
+    if (pathname === '/api/fetch-source') return await handleFetchSource(req, res);
     if (pathname === '/api/llm') return await handleLlm(req, res);
     if (pathname === '/api/gemini') return await handleGemini(req, res, FALLBACK_KEY);
+    if (pathname === '/api/radar/search') return await handleRadarSearch(req, res, FALLBACK_KEY);
+    if (pathname === '/api/radar/suggest-keywords') return await handleRadarSuggest(req, res, FALLBACK_KEY);
+    if (pathname === '/api/radar/creators') return await handleRadarCreators(req, res);
+    if (pathname === '/api/radar/creator-videos') return await handleRadarCreatorVideos(req, res);
     if (pathname === '/api/health') return sendJson(res, 200, serverInfo());
 
     // Any other /api path is a real 404, never the SPA shell - otherwise the

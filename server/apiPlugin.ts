@@ -1,7 +1,8 @@
 import type { Plugin } from 'vite';
 import {
-  handleFetchVideo, handleLlm, handleGemini, sendJson,
+  handleFetchVideo, handleFetchSource, handleLlm, handleGemini, sendJson,
   applyCors, checkAccess, handlePreflight, serverInfo,
+  handleRadarSearch, handleRadarCreators, handleRadarCreatorVideos, handleRadarSuggest,
 } from './handlers.mjs';
 
 // Mounts the same handlers the production server uses, so dev and deploy
@@ -18,8 +19,13 @@ export const apiPlugin = (fallbackApiKey: string): Plugin => ({
     };
 
     server.middlewares.use('/api/fetch-video', guard((req: any, res: any) => handleFetchVideo(req, res, fallbackApiKey)));
+    server.middlewares.use('/api/fetch-source', guard((req: any, res: any) => handleFetchSource(req, res)));
     server.middlewares.use('/api/llm', guard((req: any, res: any) => handleLlm(req, res)));
     server.middlewares.use('/api/gemini', guard((req: any, res: any) => handleGemini(req, res, fallbackApiKey)));
+    server.middlewares.use('/api/radar/search', guard((req: any, res: any) => handleRadarSearch(req, res, fallbackApiKey)));
+    server.middlewares.use('/api/radar/suggest-keywords', guard((req: any, res: any) => handleRadarSuggest(req, res, fallbackApiKey)));
+    server.middlewares.use('/api/radar/creators', guard(handleRadarCreators));
+    server.middlewares.use('/api/radar/creator-videos', guard(handleRadarCreatorVideos));
     server.middlewares.use('/api/health', (req: any, res: any) => {
       if (req.method === 'OPTIONS') return handlePreflight(req, res);
       applyCors(req, res);

@@ -12,6 +12,14 @@
   }
 }
 
+@keyframes cm-progress {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(320%); }
+}
+.cm-progress {
+  animation: cm-progress 1.5s ease-in-out infinite;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 7px;
   height: 7px;

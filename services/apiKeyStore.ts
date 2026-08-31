@@ -187,3 +187,121 @@ export const getServerUrl = (): string => {
 };
 
 export const getServerToken = (): string => (loadProviderSettings().serverToken || '').trim();
+
+// ---------------------------------------------------------------------------
+// Data sources (Content Radar)
+//
+// These are not LLM providers - they are the services that supply social data.
+// One key normally covers every platform, because a single Apify account runs
+// every actor. A per-platform override exists for the case where someone wants
+// to bill a platform to a separate account.
+
+export type DataProviderId = 'tikhub' | 'apify';
+
+export interface DataProviderInfo {
+  id: DataProviderId;
+  name: string;
+  hint: string;
+  keyPrefix: string;
+  docsUrl: string;
+  /** Platforms this source can serve today. */
+  platforms: string[];
+}
+
+export const DATA_PROVIDERS: DataProviderInfo[] = [
+  {
+    id: 'tikhub',
+    name: 'TikHub',
+    hint: 'Tính tiền theo request (~$0.01 cho cả trang kết quả). Rẻ hơn nhiều khi quét từ khoá.',
+    keyPrefix: '',
+    docsUrl: 'https://user.tikhub.io/dashboard/api',
+    platforms: ['douyin'],
+  },
+  {
+    id: 'apify',
+    name: 'Apify',
+    hint: 'Tính tiền theo từng video (~$0.005/video). Quét đối thủ chạy được cả trên gói free.',
+    keyPrefix: 'apify_api_',
+    docsUrl: 'https://console.apify.com/settings/integrations',
+    platforms: ['douyin'],
+  },
+];
+
+/**
+ * Platforms the Radar can scan and which sources can serve each one, in order
+ * of preference. 'auto' picks the first source that has a key.
+ */
+export const RADAR_PLATFORMS: { id: string; label: string; sources: DataProviderId[] }[] = [
+  { id: 'douyin', label: 'Douyin', sources: ['tikhub', 'apify'] },
+];
+
+export const getDataProvider = (id: DataProviderId): DataProviderInfo =>
+  DATA_PROVIDERS.find((p) => p.id === id) || DATA_PROVIDERS[0];
+
+const readSettings = (): any => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const writeSettings = (patch: Record<string, unknown>): void => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...readSettings(), ...patch }));
+  } catch (e) {
+    console.error('Không lưu được cấu hình nguồn dữ liệu', e);
+  }
+};
+
+/** The shared key for a data source, used by every platform it serves. */
+export const getDataKey = (id: DataProviderId): string => (readSettings().dataKeys?.[id] || '').trim();
+
+export const setDataKey = (id: DataProviderId, key: string): void => {
+  writeSettings({ dataKeys: { ...(readSettings().dataKeys || {}), [id]: key.trim() } });
+};
+
+/**
+ * Optional per-platform override of a source's shared key. Empty means "use the
+ * shared one". Keyed by platform AND source, so someone can bill Douyin-via-
+ * TikHub to one account and Douyin-via-Apify to another.
+ */
+const overrideKey = (platform: string, source: DataProviderId) => `${platform}:${source}`;
+
+export const getPlatformKeyOverride = (platform: string, source: DataProviderId): string =>
+  (readSettings().platformKeys?.[overrideKey(platform, source)] || '').trim();
+
+export const setPlatformKeyOverride = (platform: string, source: DataProviderId, key: string): void => {
+  writeSettings({
+    platformKeys: { ...(readSettings().platformKeys || {}), [overrideKey(platform, source)]: key.trim() },
+  });
+};
+
+/** Which source a platform should use. 'auto' = first one with a key. */
+export type RadarSourceChoice = DataProviderId | 'auto';
+
+export const getPlatformSource = (platform: string): RadarSourceChoice =>
+  (readSettings().platformSources?.[platform] as RadarSourceChoice) || 'auto';
+
+export const setPlatformSource = (platform: string, source: RadarSourceChoice): void => {
+  writeSettings({ platformSources: { ...(readSettings().platformSources || {}), [platform]: source } });
+};
+
+/** The key for one source on one platform: override first, then the shared key. */
+export const getSourceKey = (platform: string, source: DataProviderId): string =>
+  getPlatformKeyOverride(platform, source) || getDataKey(source);
+
+/**
+ * Every key the server may need for this platform, by source id. The server
+ * decides which one to spend, so it can fall back when the preferred source has
+ * no key saved.
+ */
+export const getRadarKeys = (platform: string): Partial<Record<DataProviderId, string>> => {
+  const entry = RADAR_PLATFORMS.find((p) => p.id === platform);
+  const out: Partial<Record<DataProviderId, string>> = {};
+  for (const source of entry?.sources || []) {
+    const key = getSourceKey(platform, source);
+    if (key) out[source] = key;
+  }
+  return out;
+};

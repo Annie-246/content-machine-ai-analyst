@@ -5,6 +5,7 @@ import {
   loadProviderSettings, saveProviderSettings, maskKey, getProvider, getServerUrl,
 } from '../services/apiKeyStore';
 import { postJson, getJson } from '../services/apiClient';
+import { DataSourcePanel } from './DataSourcePanel';
 
 type TestState = { status: 'idle' | 'testing' | 'ok' | 'fail'; message: string };
 
@@ -230,6 +231,8 @@ export const IntegrationsPanel = () => {
           Đang gọi tới: <code className="font-mono">{getServerUrl() || 'chính trang web này'}</code>
         </p>
       </div>
+
+      <DataSourcePanel />
 
       {/* Current routing at a glance */}
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">

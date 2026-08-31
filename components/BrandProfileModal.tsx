@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { X, Sparkles, Check, Building2, MessageSquare, Volume2, ShieldAlert, Target, Lightbulb, Save, ChevronRight, BookOpen, Download, Upload, Trash2, Hash, AlignLeft } from 'lucide-react';
+import { X, Sparkles, Check, Building2, MessageSquare, Volume2, ShieldAlert, Target, Lightbulb, Save, ChevronRight, BookOpen, Download, Upload, Trash2, Hash, AlignLeft, Wand2 } from 'lucide-react';
 import { BrandProfile } from '../types';
 import { SAMPLE_BRAND_PRESETS, normalizeBrand } from '../data/brandPresets';
+import { BrandLearnModal } from './BrandLearnModal';
 
 interface BrandProfileModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
   const [formData, setFormData] = useState<BrandProfile>({ ...activeBrand });
   const [savedAlert, setSavedAlert] = useState(false);
   const [importError, setImportError] = useState('');
+  const [isLearnOpen, setIsLearnOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -63,6 +65,12 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
     setFormData(prev => ({ ...sample, id: prev.id, name: prev.name.trim() || sample.name }));
   };
 
+  // Fields the AI read out of the brand's own material, merged into the form so
+  // the user still reviews and saves them by hand.
+  const handleApplyLearned = (fields: Partial<BrandProfile>) => {
+    setFormData(prev => ({ ...prev, ...fields }));
+  };
+
   const handleExport = () => {
     const { id, ...exportable } = formData;
     const blob = new Blob([JSON.stringify(exportable, null, 2)], { type: 'application/json' });
@@ -91,6 +99,7 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
   };
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="bg-white border border-red-200 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800"
@@ -115,6 +124,22 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-2 rounded-lg hover:bg-red-100 transition-colors">
             <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="px-6 py-3 bg-white border-b border-red-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">Chưa biết điền gì?</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Đưa website, link mạng xã hội hoặc file PDF / tài liệu của thương hiệu vào, AI sẽ đọc và đề xuất nội dung cho từng mục bên dưới.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsLearnOpen(true)}
+            className="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm flex items-center gap-2 transition-all border border-red-500 active:scale-95 shrink-0"
+          >
+            <Wand2 className="w-4 h-4" /> Học từ nguồn thật
           </button>
         </div>
 
@@ -303,5 +328,13 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
         </div>
       </div>
     </div>
+
+    <BrandLearnModal
+      isOpen={isLearnOpen}
+      onClose={() => setIsLearnOpen(false)}
+      brand={formData}
+      onApply={handleApplyLearned}
+    />
+    </>
   );
 };

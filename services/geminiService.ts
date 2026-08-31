@@ -432,7 +432,7 @@ ${brandFooter}`
 
     case AnalysisMode.SCRIPT_GENERATION:
       return `
-      Ý TƯỞNG / BẢN NHÁP GỐC CỦA NGƯỜI DÙNG: "${userPrompt}"
+      Ý TƯỞNG / BẢN NHÁP GỐC CỦA NGƯỜI DÙNG: "${userPrompt || '(Không nhập tay - hãy lấy ý tưởng từ nội dung đã trích xuất từ liên kết và ảnh đính kèm ở trên)'}"
 
       ${brandGuidelines}
 
@@ -815,8 +815,8 @@ export const analyzeContent = async (
 
   let parts: any[] = [];
   
-  if (mode === AnalysisMode.CONTENT_REMAKE && contextData) {
-     parts.push({ text: `NỘI DUNG GỐC ĐÃ TRÍCH XUẤT:\n${contextData}` });
+  if (contextData) {
+     parts.push({ text: `NỘI DUNG GỐC ĐÃ TRÍCH XUẤT TỪ LIÊN KẾT (dữ liệu thật, hãy dùng làm căn cứ chính):\n${contextData}` });
   } 
   
   // A real video pulled from a social link: Gemini watches the actual file.
@@ -850,8 +850,44 @@ export const analyzeContent = async (
     promptText += `\n\n${formatVideoMeta(videoMeta)}`;
   }
 
-  // Only ask the model to hunt the web when we could NOT hand it the video itself.
-  const needsWebLookup = !fileUri && !!url;
+  // Without this the model treats attached pictures as decoration and answers
+  // from the text alone, which loses posts whose message lives on the image.
+  if (extraImages?.length) {
+    promptText += `\n\nCÓ ${extraImages.length} ẢNH ĐÍNH KÈM Ở TRÊN (ảnh chụp bài viết và/hoặc ảnh trong bài đăng gốc).
+BẮT BUỘC: Đọc kỹ TOÀN BỘ chữ trong từng ảnh và coi đó là một phần chính thức của nội dung gốc, ngang hàng với phần văn bản.
+Nhiều người sáng tạo đặt thông tin quan trọng nhất lên ảnh chứ không viết trong caption, nên bỏ qua ảnh là bỏ sót nội dung.`;
+  }
+
+  // A video feature falls back to the post's caption, stats, comments and cover
+  // image when the file itself cannot be downloaded - Douyin, or any link behind
+  // a login. Left unsaid, the model cheerfully invents a shot-by-shot timeline
+  // for a video it never saw.
+  const VIDEO_MODES = [
+    AnalysisMode.REMAKE_SCRIPT,
+    AnalysisMode.DEEP_ANALYSIS,
+    AnalysisMode.SCRIPT_EXTRACT,
+    AnalysisMode.VIDEO_SCORING,
+  ];
+
+  if (VIDEO_MODES.includes(mode) && !fileUri && !base64Data) {
+    promptText += `
+
+=======================================================
+⚠️ KHÔNG TẢI ĐƯỢC FILE VIDEO GỐC
+=======================================================
+Bạn KHÔNG hề xem được video. Tất cả những gì bạn có là: caption, số liệu tương tác, bình luận của người xem và ảnh bìa ở trên.
+
+BẮT BUỘC:
+- Mở đầu câu trả lời bằng một dòng nói rõ: phân tích dựa trên caption, ảnh bìa và bình luận, KHÔNG dựa trên nội dung video.
+- TUYỆT ĐỐI KHÔNG bịa mốc thời gian, lời thoại, cảnh quay, góc máy hay diễn biến hình ảnh trong video.
+- BỎ HẲN mọi bảng bóc tách kịch bản theo timeline. Thà thiếu còn hơn bịa.
+- Chỉ nêu những gì suy ra được từ dữ liệu thật đang có.
+=======================================================`;
+  }
+
+  // Only ask the model to hunt the web when we could hand it neither the video
+  // nor the text of the page behind the link.
+  const needsWebLookup = !fileUri && !!url && !contextData;
 
   if (needsWebLookup) {
     promptText += `\n\nCHÚ Ý: Không tải được file gốc từ liên kết này. Hãy đọc thông tin công khai về liên kết: ${url}
@@ -879,7 +915,7 @@ QUAN TRỌNG: Nếu không tìm được dữ liệu thật về nội dung vide
     parts: [...parts, { text: promptText }],
     systemInstruction,
     temperature: 0.7,
-    useSearch: mode === AnalysisMode.CONTENT_AUDIT || needsWebLookup,
+    useSearch: !contextData && (mode === AnalysisMode.CONTENT_AUDIT || needsWebLookup),
   });
 
   return cleanResponse(payload.text);

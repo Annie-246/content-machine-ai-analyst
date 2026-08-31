@@ -1,9 +1,9 @@
 import React from 'react';
-import { Home, LayoutGrid, Fingerprint, PenLine, FlaskConical, Puzzle, ChevronDown } from 'lucide-react';
+import { Home, LayoutGrid, Fingerprint, PenLine, Puzzle, ChevronDown, Radar } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { APP_CONFIG } from '../data/appConfig';
 
-export type SidebarView = 'overview' | 'features' | 'brand-dna' | 'voice' | 'formula' | 'integrations';
+export type SidebarView = 'overview' | 'radar' | 'features' | 'brand-dna' | 'voice' | 'integrations';
 
 interface NavItem {
   id: SidebarView;
@@ -14,13 +14,13 @@ interface NavItem {
 
 const MAIN_NAV: NavItem[] = [
   { id: 'overview', label: 'Tổng quan', icon: Home },
+  { id: 'radar', label: 'Content Radar', icon: Radar },
   { id: 'features', label: 'Tính năng', icon: LayoutGrid },
 ];
 
 const SETTINGS_NAV: NavItem[] = [
   { id: 'brand-dna', label: 'Brand DNA', icon: Fingerprint },
   { id: 'voice', label: 'Giọng văn', icon: PenLine },
-  { id: 'formula', label: 'Công thức', icon: FlaskConical },
   { id: 'integrations', label: 'Tích hợp', icon: Puzzle },
 ];
 
