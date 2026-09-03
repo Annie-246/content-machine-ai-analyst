@@ -100,12 +100,12 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
 
   return (
     <>
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="bg-white border border-pink-200 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 bg-slate-900 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 bg-slate-900 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-white/10 text-white rounded-xl border border-white/20">
               <Building2 className="w-6 h-6" />
@@ -127,7 +127,7 @@ export const BrandProfileModal: React.FC<BrandProfileModalProps> = ({
           </button>
         </div>
 
-        <div className="px-6 py-3.5 bg-[#A4145E] border-b border-[#86104D] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-3.5 bg-[#A4145E] border-b border-[#86104D] flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-bold text-white uppercase tracking-wider">Chưa biết điền gì?</p>
             <p className="text-[11px] text-white/80 mt-0.5">

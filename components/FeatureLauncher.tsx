@@ -122,7 +122,7 @@ export const FeatureLauncher = ({ onSelectFeature }: { onSelectFeature: (mode: A
     <div className="max-w-[1180px]">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <h1 className="text-[40px] leading-tight font-bold text-slate-900">Bạn muốn tạo gì hôm nay?</h1>
+          <h1 className="text-[26px] sm:text-[32px] lg:text-[40px] leading-tight font-bold text-slate-900">Bạn muốn tạo gì hôm nay?</h1>
           <p className="mt-2.5 text-[15px] text-slate-600">
             Rê chuột qua từng dòng để xem trước, bấm để bắt đầu.
           </p>

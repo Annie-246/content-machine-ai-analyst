@@ -10,7 +10,7 @@ export const WorkflowStepper: React.FC<{
   current: number;
   running?: boolean;
 }> = ({ steps, current, running }) => (
-  <div className="flex items-start">
+  <div className="flex items-start overflow-x-auto custom-scrollbar pb-1">
     {steps.map(([label, hint], i) => {
       const n = i + 1;
       const done = n < current;
@@ -19,7 +19,7 @@ export const WorkflowStepper: React.FC<{
 
       return (
         <React.Fragment key={label}>
-          <div className="text-center w-36 shrink-0">
+          <div className="text-center w-28 sm:w-36 shrink-0">
             <span
               className={`mx-auto mb-2 w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors
                 ${done ? 'bg-[#A4145E] text-white'
@@ -54,7 +54,7 @@ export const SectionCard: React.FC<{
   muted?: boolean;
 }> = ({ n, title, hint, action, children, muted }) => (
   <section className={`rounded-2xl border ${muted ? 'border-slate-200 bg-white' : 'border-slate-200 bg-white'} overflow-hidden`}>
-    <div className="px-6 py-4 flex items-center justify-between gap-4 border-b border-slate-100">
+    <div className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 sm:gap-4 border-b border-slate-100">
       <div className="flex items-center gap-3 min-w-0">
         <span className="w-7 h-7 rounded-full bg-[#FDF2F7] text-[#A4145E] flex items-center justify-center text-sm font-bold shrink-0">
           {n}

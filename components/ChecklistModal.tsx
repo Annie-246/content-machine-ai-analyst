@@ -117,9 +117,9 @@ export const ChecklistModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
       <div className="w-full max-w-4xl max-h-[88vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between gap-4 px-7 py-5 border-b border-slate-200">
+        <div className="flex items-center justify-between gap-4 px-4 sm:px-7 py-4 sm:py-5 border-b border-slate-200">
           <div className="flex items-center gap-2.5">
             <ClipboardList className="w-5 h-5 text-[#A4145E]" />
             <h2 className="text-lg font-bold text-slate-900">Bộ tiêu chí chấm điểm</h2>
@@ -129,7 +129,7 @@ export const ChecklistModal: React.FC<{
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-7">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-7">
           {editing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

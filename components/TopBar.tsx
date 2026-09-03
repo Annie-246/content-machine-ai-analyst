@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ShieldCheck, Check, Aperture, Plus } from 'lucide-react';
+import { ChevronDown, ShieldCheck, Check, Aperture, Plus, Menu } from 'lucide-react';
 import { BrandProfile } from '../types';
 
 export const TopBar = ({
@@ -8,12 +8,15 @@ export const TopBar = ({
   onSelectBrand,
   onManageBrand,
   onAddBrand,
+  onOpenMenu,
 }: {
   activeBrand: BrandProfile;
   brandList: BrandProfile[];
   onSelectBrand: (id: string) => void;
   onManageBrand: () => void;
   onAddBrand: () => void;
+  // Chỉ dùng ở màn hình hẹp, nơi sidebar nằm ngoài màn hình.
+  onOpenMenu?: () => void;
 }) => {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -29,11 +32,19 @@ export const TopBar = ({
 
   return (
     <header className="sticky top-0 z-30 bg-[#A4145E] border-b border-[#86104D]">
-      <div className="flex items-center justify-between gap-4 px-10 py-4">
-        <div className="relative" ref={wrapRef}>
+      <div className="flex items-center justify-between gap-3 px-4 py-3 lg:gap-4 lg:px-10 lg:py-4">
+        <button
+          onClick={onOpenMenu}
+          className="lg:hidden shrink-0 p-2.5 rounded-xl border border-white/60 text-white hover:bg-white/10 transition-colors"
+          aria-label="Mở menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="relative min-w-0 flex-1 lg:flex-none" ref={wrapRef}>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex items-center gap-3 pl-4 pr-4 py-2.5 rounded-xl bg-transparent border border-white/60 hover:bg-white/10 transition-colors min-w-[340px] group"
+            className="w-full lg:w-auto inline-flex items-center gap-3 px-3 lg:px-4 py-2.5 rounded-xl bg-transparent border border-white/60 hover:bg-white/10 transition-colors lg:min-w-[340px] group"
           >
             <Aperture className="w-[18px] h-[18px] text-white shrink-0" />
             <span className="flex-1 text-left min-w-0">
@@ -83,10 +94,10 @@ export const TopBar = ({
 
         <button
           onClick={onManageBrand}
-          className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-transparent border border-white/60 text-white font-semibold hover:bg-white/10 transition-colors"
+          className="shrink-0 inline-flex items-center gap-2.5 px-3 lg:px-5 py-2.5 lg:py-3 rounded-xl bg-transparent border border-white/60 text-white font-semibold hover:bg-white/10 transition-colors"
         >
           <ShieldCheck className="w-[18px] h-[18px]" />
-          Quản lý Brand
+          <span className="hidden sm:inline">Quản lý Brand</span>
         </button>
       </div>
     </header>

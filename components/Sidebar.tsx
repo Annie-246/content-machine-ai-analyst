@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, LayoutGrid, Fingerprint, Puzzle, ChevronDown, Radar, Waves, History, Users } from 'lucide-react';
+import { Home, LayoutGrid, Fingerprint, Puzzle, ChevronDown, Radar, Waves, History, Users, X } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { APP_CONFIG } from '../data/appConfig';
 
@@ -51,16 +51,42 @@ export const Sidebar = ({
   onNavigate,
   teamName = APP_CONFIG.name,
   teamRole = APP_CONFIG.teamRole,
+  isMobileOpen = false,
+  onCloseMobile,
 }: {
   activeView: SidebarView;
   onNavigate: (view: SidebarView) => void;
   teamName?: string;
   teamRole?: string;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }) => {
   return (
-    <aside className="w-[300px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
-      <div className="px-8 py-6 border-b border-slate-200">
+    <>
+    {/* Màn hình hẹp: nền mờ phía sau ngăn kéo, chạm vào là đóng. */}
+    {isMobileOpen && (
+      <div
+        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"
+        onClick={onCloseMobile}
+        aria-hidden
+      />
+    )}
+
+    <aside
+      className={`w-[300px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-screen
+        fixed inset-y-0 left-0 z-50 transition-transform duration-200
+        lg:sticky lg:top-0 lg:z-auto lg:translate-x-0
+        ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}
+    >
+      <div className="px-8 py-6 border-b border-slate-200 flex items-center justify-between gap-3">
         <AppLogo />
+        <button
+          onClick={onCloseMobile}
+          className="lg:hidden p-2 -mr-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          aria-label="Đóng menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-6 pr-4 custom-scrollbar">
@@ -96,5 +122,6 @@ export const Sidebar = ({
         </button>
       </div>
     </aside>
+    </>
   );
 };

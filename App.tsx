@@ -237,6 +237,8 @@ const App = () => {
   // Shell navigation: mở app là vào Tổng quan, từ đó người dùng tự chọn đi tiếp.
   const [view, setView] = useState<AppView>('overview');
   const [sidebarActive, setSidebarActive] = useState<SidebarView>('overview');
+  // Trên điện thoại sidebar nằm ngoài màn hình, mở ra bằng nút menu ở thanh trên.
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const activeBrand: BrandProfile = brandList.find(b => b.id === activeBrandId) || brandList[0] || PLACEHOLDER_BRAND;
 
@@ -860,6 +862,7 @@ const App = () => {
 
   const handleNavigate = (target: SidebarView) => {
     setSidebarActive(target);
+    setIsMobileNavOpen(false);
     switch (target) {
       case 'overview':
         setView('overview');
@@ -910,7 +913,12 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans antialiased selection:bg-pink-500 selection:text-white flex">
-      <Sidebar activeView={sidebarActive} onNavigate={handleNavigate} />
+      <Sidebar
+        activeView={sidebarActive}
+        onNavigate={handleNavigate}
+        isMobileOpen={isMobileNavOpen}
+        onCloseMobile={() => setIsMobileNavOpen(false)}
+      />
 
       <div className="flex-1 min-w-0 flex flex-col">
         <TopBar
@@ -919,10 +927,11 @@ const App = () => {
           onSelectBrand={setActiveBrandId}
           onManageBrand={() => setIsBrandModalOpen(true)}
           onAddBrand={handleAddBrand}
+          onOpenMenu={() => setIsMobileNavOpen(true)}
         />
 
         <div className="flex-1 flex min-w-0 items-start">
-        <main className="flex-1 min-w-0 px-10 py-10">
+        <main className="flex-1 min-w-0 px-4 py-6 lg:px-10 lg:py-10">
 
         {view === 'features' && (
           <FeatureLauncher onSelectFeature={handleSelectFeature} />
@@ -940,7 +949,7 @@ const App = () => {
 
         {view === 'overview' && (
           <div className="max-w-5xl">
-            <h1 className="text-[40px] leading-tight font-bold text-slate-900">
+            <h1 className="text-[26px] sm:text-[32px] lg:text-[40px] leading-tight font-bold text-slate-900">
               Sản xuất nội dung theo bản sắc thương hiệu
             </h1>
             <p className="mt-3 text-[15px] text-slate-600">
@@ -976,7 +985,7 @@ const App = () => {
             <ActiveFeatureIcon className="w-9 h-9 text-[#A4145E]" strokeWidth={1.5} />
           </div>
           <div className="flex-1 min-w-[240px]">
-            <h1 className="text-[34px] leading-tight font-bold text-slate-900">
+            <h1 className="text-[24px] sm:text-[28px] lg:text-[34px] leading-tight font-bold text-slate-900">
               {featureTitle(selectedMode)}
             </h1>
             <p className="mt-1.5 text-[15px] text-slate-600">{featureConfig.subtitle}</p>
@@ -1510,7 +1519,7 @@ const App = () => {
 
                     <div className="space-y-1.5">
                       <label className="text-xs uppercase text-slate-700 font-bold">3. Tỉ lệ khung hình</label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => setAspectRatio('16:9')}
                           className={`py-2.5 rounded-lg border text-xs font-semibold transition-all ${aspectRatio === '16:9' ? 'bg-[#A4145E] border-[#A4145E] text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}`}
