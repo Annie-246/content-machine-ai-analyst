@@ -29,7 +29,8 @@ import {
   ArrowLeft,
   FileImage,
   UploadCloud,
-  ClipboardPaste
+  ClipboardPaste,
+  ClipboardList,
 } from 'lucide-react';
 import { 
   AnalysisMode, 
@@ -42,23 +43,35 @@ import {
 } from './types';
 import { STORAGE_KEY_BRAND_PROFILES, STORAGE_KEY_ACTIVE_BRAND, createBlankBrand } from './data/brandPresets';
 import { analyzeContent, fileToGenerativePart, generateRemakeThumbnail } from './services/geminiService';
+import { loadLinkSource } from './services/sourceLoader';
 import { Button, FileDropzone } from './components/UiComponents';
 import { BrandProfileModal } from './components/BrandProfileModal';
 import { BrandSelectorBanner } from './components/BrandSelectorBanner';
 import { Sidebar, SidebarView } from './components/Sidebar';
 import { ContentRadar } from './components/ContentRadar';
+import { ContentWaterfall } from './components/ContentWaterfall';
 import { TopBar } from './components/TopBar';
 import { FeatureLauncher } from './components/FeatureLauncher';
 import { FeatureRail } from './components/FeatureRail';
 import { WorkflowStepper, SectionCard, RunStatus } from './components/WorkspaceShell';
 import { getFeature } from './data/features';
 import { IntegrationsPanel } from './components/IntegrationsPanel';
+import { CommunityPanel } from './components/CommunityPanel';
+import { ChecklistModal } from './components/ChecklistModal';
+import { listChecklistsFor, getChecklist } from './services/checklistStore';
+import { OverviewCommunity } from './components/OverviewCommunity';
+import { OverviewIntro } from './components/OverviewIntro';
+import { BookingNudge } from './components/BookingNudge';
+import { AppFooter } from './components/AppFooter';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { getGeminiApiKey } from './services/apiKeyStore';
 import { postJson } from './services/apiClient';
 import { exportToExcelCsv, openInGoogleSheets } from './src/utils/exportUtils';
+import { HistoryPanel } from './components/HistoryPanel';
+import { purgeExpired, requestPersistence, dataUrlToBlob, type HistoryKind } from './services/historyStore';
+import { recordAndBackup } from './services/historyBackup';
 
-type AppView = 'overview' | 'radar' | 'features' | 'workspace' | 'integrations';
+type AppView = 'overview' | 'radar' | 'waterfall' | 'features' | 'workspace' | 'history' | 'integrations' | 'community';
 
 const FEATURE_TITLES: Partial<Record<AnalysisMode, string>> = {
   [AnalysisMode.REMAKE_SCRIPT]: 'Remake kịch bản video',
@@ -66,14 +79,17 @@ const FEATURE_TITLES: Partial<Record<AnalysisMode, string>> = {
   [AnalysisMode.SCRIPT_EXTRACT]: 'Trích script video',
   [AnalysisMode.SCRIPT_GENERATION]: 'Tạo kịch bản từ ý tưởng',
   [AnalysisMode.CONTENT_AUDIT]: 'Remake bài viết',
+  [AnalysisMode.ARTICLE_WRITING]: 'Viết bài',
   [AnalysisMode.ARTICLE_ANALYSIS]: 'Phân tích sâu bài viết',
   [AnalysisMode.THUMBNAIL_AUDIT]: 'Tạo hình ảnh',
   [AnalysisMode.VIDEO_SCORING]: 'Chấm điểm nội dung video',
   [AnalysisMode.ARTICLE_SCORING]: 'Chấm điểm nội dung bài viết',
 };
 
-// Links we can download server-side with yt-dlp.
-const SOCIAL_LINK_RE = /(youtube\.com|youtu\.be|tiktok\.com|douyin\.com|iesdouyin\.com|facebook\.com|fb\.watch|instagram\.com|x\.com|twitter\.com|threads\.net)/i;
+// Tên tính năng lấy từ catalogue khi bảng trên chưa khai báo, để thêm mode mới
+// không còn rơi vào một tiêu đề mặc định sai như trước.
+const featureTitle = (mode: AnalysisMode): string =>
+  FEATURE_TITLES[mode] || getFeature(mode)?.title || 'Kết quả';
 
 type SourceKind = 'link' | 'upload' | 'screen' | 'text' | 'images';
 
@@ -111,7 +127,7 @@ const FEATURE_CONFIG: Partial<Record<AnalysisMode, FeatureConfig>> = {
     uploadLabel: 'Hoặc kéo thả file video vào đây',
   },
   [AnalysisMode.SCRIPT_EXTRACT]: {
-    subtitle: 'Trích xuất nguyên văn lời thoại kèm mốc thời gian từ video.',
+    subtitle: 'Trích xuất nguyên văn lời thoại kèm mốc thời gian. Video tiếng nước ngoài sẽ có thêm cột bản dịch tiếng Việt.',
     sources: ['link', 'upload'],
     sourceLabel: 'Video cần trích script',
     sourceHint: 'Link hoặc file video, audio',
@@ -139,6 +155,16 @@ const FEATURE_CONFIG: Partial<Record<AnalysisMode, FeatureConfig>> = {
     textPlaceholder: 'Dán nội dung bài viết cần remake vào đây...',
     actionLabel: 'Remake bài viết chuẩn thương hiệu',
   },
+  [AnalysisMode.ARTICLE_WRITING]: {
+    subtitle: 'Từ vài dòng ý tưởng thành bài viết hoàn chỉnh, viết theo đúng những gì làm nên một bài hiệu quả.',
+    sources: ['text', 'link', 'images'],
+    sourceLabel: 'Ý tưởng của bạn',
+    sourceHint: 'Ý tưởng thô, link tham khảo hoặc ảnh',
+    linkPlaceholder: 'Dán link bài viết, tài liệu để lấy thêm chất liệu (không bắt buộc)...',
+    textLabel: 'Ý tưởng bài viết (chỉ cần vài dòng):',
+    textPlaceholder: 'VD: Muốn viết bài chia sẻ về việc nhiều shop chạy ads mà không ra đơn, nguyên nhân thật nằm ở sản phẩm chứ không phải ngân sách...',
+    actionLabel: 'Viết bài kèm hook gợi ý',
+  },
   [AnalysisMode.ARTICLE_ANALYSIS]: {
     subtitle: 'Mổ xẻ một bài viết hay để hiểu vì sao nó hiệu quả. Chỉ phân tích, không chấm điểm và không viết lại.',
     sources: ['link', 'text', 'images'],
@@ -158,20 +184,23 @@ const FEATURE_CONFIG: Partial<Record<AnalysisMode, FeatureConfig>> = {
     available: false,
   },
   [AnalysisMode.VIDEO_SCORING]: {
-    subtitle: 'Chấm điểm video theo bộ tiêu chí của thương hiệu.',
-    sources: [],
-    sourceLabel: 'Nguồn video',
-    sourceHint: '',
-    actionLabel: 'Chấm điểm nội dung',
-    available: false,
+    subtitle: 'Chấm điểm video theo bộ tiêu chí bạn tự nạp, hoặc theo Brand DNA nếu chưa có bộ nào.',
+    sources: ['link', 'upload'],
+    sourceLabel: 'Video cần chấm',
+    sourceHint: 'Link hoặc file video',
+    linkPlaceholder: 'Dán link video TikTok, YouTube, Reels, Facebook...',
+    actionLabel: 'Chấm điểm video',
+    uploadLabel: 'Hoặc kéo thả file video vào đây',
   },
   [AnalysisMode.ARTICLE_SCORING]: {
-    subtitle: 'Chấm điểm bài viết theo bộ tiêu chí của thương hiệu.',
-    sources: [],
-    sourceLabel: 'Nguồn bài viết',
-    sourceHint: '',
-    actionLabel: 'Chấm điểm nội dung',
-    available: false,
+    subtitle: 'Chấm điểm bài viết theo bộ tiêu chí bạn tự nạp, hoặc theo Brand DNA nếu chưa có bộ nào.',
+    sources: ['link', 'text', 'images'],
+    sourceLabel: 'Nội dung cần chấm',
+    sourceHint: 'Link, text hoặc ảnh chụp bài',
+    linkPlaceholder: 'Dán link bài viết, Google Docs, PDF hoặc bài đăng mạng xã hội...',
+    textLabel: 'Nội dung cần chấm điểm:',
+    textPlaceholder: 'Dán nội dung vào đây. Có thể bỏ trống nếu đã dán link hoặc tải ảnh chụp.',
+    actionLabel: 'Chấm điểm bài viết',
   },
 };
 
@@ -205,9 +234,9 @@ const App = () => {
   // Screenshots of the article being analysed - multiple images allowed.
   const [articleImages, setArticleImages] = useState<{ file: File; previewUrl: string; base64: string; mimeType: string }[]>([]);
 
-  // Shell navigation: the launcher screen opens a feature, which reveals the workspace.
-  const [view, setView] = useState<AppView>('features');
-  const [sidebarActive, setSidebarActive] = useState<SidebarView>('features');
+  // Shell navigation: mở app là vào Tổng quan, từ đó người dùng tự chọn đi tiếp.
+  const [view, setView] = useState<AppView>('overview');
+  const [sidebarActive, setSidebarActive] = useState<SidebarView>('overview');
 
   const activeBrand: BrandProfile = brandList.find(b => b.id === activeBrandId) || brandList[0] || PLACEHOLDER_BRAND;
 
@@ -219,11 +248,27 @@ const App = () => {
   const [error, setError] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  // Comments carry the objections and questions a caption never admits to, so
+  // they are worth reading - but only when the run is about the audience rather
+  // than about the post itself.
+  const [readComments, setReadComments] = useState(true);
   const [customUserPrompt, setCustomUserPrompt] = useState('');
   const [userInstructions, setUserInstructions] = useState('');
   const [selectedFormula, setSelectedFormula] = useState<ScriptFormula>('auto');
+  // Bộ tiêu chí chấm điểm đang chọn. Rỗng nghĩa là chấm theo Brand DNA và bộ
+  // tiêu chí chuẩn của app.
+  const [selectedChecklistId, setSelectedChecklistId] = useState('');
+  const [isChecklistOpen, setIsChecklistOpen] = useState(false);
+  const [checklistVersion, setChecklistVersion] = useState(0);
+
 
   const featureConfig = FEATURE_CONFIG[selectedMode] || FEATURE_CONFIG[AnalysisMode.REMAKE_SCRIPT]!;
+
+  // checklistVersion đổi mỗi khi người dùng sửa kho, để danh sách này đọc lại.
+  const availableChecklists = React.useMemo(
+    () => listChecklistsFor(selectedMode === AnalysisMode.VIDEO_SCORING ? 'video' : 'article'),
+    [selectedMode, checklistVersion],
+  );
   const activeFeature = getFeature(selectedMode);
   const ActiveFeatureIcon = activeFeature.icon;
 
@@ -290,6 +335,42 @@ const App = () => {
       }
     };
   }, [screenStream]);
+
+  // Lịch sử nội dung: dọn dữ liệu hết hạn ngay khi mở app.
+  //
+  // A browser tab has no background job, so start-up is the only moment the
+  // promise "text goes after 7 days, images after 3" can actually be kept.
+  useEffect(() => {
+    purgeExpired();
+    requestPersistence();
+  }, []);
+
+  /**
+   * Files a finished result into the local history, then hands it to Drive.
+   *
+   * Deliberately not awaited by the callers: saving must never delay the result
+   * appearing on screen, and a failed save is logged inside the store rather
+   * than surfaced as an error on a run that actually succeeded.
+   */
+  const recordHistory = (input: {
+    kind: HistoryKind;
+    html?: string;
+    title?: string;
+    sourceUrl?: string;
+    assets?: { name: string; mimeType: string; blob: Blob }[];
+  }) => {
+    recordAndBackup({
+      brandId: activeBrand.id,
+      brandName: activeBrand.name,
+      kind: input.kind,
+      mode: selectedMode,
+      modeLabel: featureTitle(selectedMode),
+      title: input.title,
+      html: input.html,
+      sourceUrl: input.sourceUrl,
+      assets: input.assets,
+    });
+  };
 
   const handleSaveBrandProfile = (updatedBrand: BrandProfile) => {
     setBrandList(prev => {
@@ -483,6 +564,7 @@ const App = () => {
             selectedFormula
           );
           setResult(responseText);
+          recordHistory({ kind: 'analysis', html: responseText });
           setTimeout(() => {
             resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 100);
@@ -535,160 +617,46 @@ const App = () => {
   // Reads whatever text sits behind a link - a Facebook or X post, a Threads
   // thread, an article - so the model works from the real wording instead of
   // being told to look the link up on the web.
-  const fetchLinkAsText = async (url: string): Promise<boolean> => {
-    try {
-      const payload = await postJson<{
-        kind: string; title: string; text?: string; base64?: string; mimeType?: string;
-        images?: { base64: string; mimeType: string }[];
-      }>('/api/fetch-source', { url });
-
-      if (payload.base64) {
-        setFileData({
-          file: null, previewUrl: '', type: 'url',
-          base64: payload.base64, mimeType: payload.mimeType || 'application/pdf',
-          url, sourceTitle: payload.title,
-        });
-        return true;
-      }
-      if (payload.text && payload.text.trim().length > 40) {
-        setFileData({
-          file: null, previewUrl: '', type: 'url', base64: '', mimeType: '',
-          url, sourceText: payload.text, sourceTitle: payload.title,
-          sourceImages: payload.images,
-        });
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  };
-
   const handleUrlFetch = async () => {
     if (!urlInput.trim()) return;
 
-    const isSocialLink = SOCIAL_LINK_RE.test(urlInput);
+    // Only the video features need the file itself; the rest read the page.
     const wantsVideo = featureConfig.sources.includes('upload') || featureConfig.sources.includes('screen');
-
-    // Text-only features never need a video file, so read the page straight away.
-    if (!wantsVideo) {
-      setLoading({ isLoading: true, message: 'Đang đọc nội dung trang...', step: 1 });
-      setError('');
-      setResult('');
-      const ok = await fetchLinkAsText(urlInput);
-      setLoading({ isLoading: false, message: '', step: 0 });
-      if (!ok) {
-        // Keep the bare link so the run is still possible, just less accurate.
-        setFileData({ file: null, previewUrl: '', type: 'url', base64: '', mimeType: '', url: urlInput });
-        setError('Chưa đọc được nội dung trang này, AI sẽ chỉ dựa vào đường dẫn. Hãy dán thẳng nội dung vào ô văn bản để chính xác hơn.');
-      }
-      return;
-    }
 
     setLoading({ isLoading: true, message: 'Đang kết nối liên kết...', step: 1 });
     setError('');
     setResult('');
-    setFileData(null);
-    setGeneratedImageUrl('');
-    setUserAssetData(null);
-    stopScreenShare();
+
+    if (wantsVideo) {
+      setFileData(null);
+      setGeneratedImageUrl('');
+      setUserAssetData(null);
+      stopScreenShare();
+    }
 
     try {
-      // A social post can never be fetched from the browser (CORS), so go
-      // straight to the server-side downloader instead of failing first.
-      if (isSocialLink) {
-        setLoading({ isLoading: true, message: 'Đang tải video từ mạng xã hội và đẩy lên Gemini...', step: 1 });
-
-        let payload: any;
-        try {
-          payload = await postJson('/api/fetch-video', { url: urlInput, apiKey: getGeminiApiKey() });
-        } catch (apiError: any) {
-          // Most social links are not videos at all - a text post, a photo
-          // album, a profile. Read them as text rather than giving up.
-          setLoading({ isLoading: true, message: 'Không có video trong link này, đang đọc nội dung bài đăng...', step: 1 });
-          const ok = await fetchLinkAsText(urlInput);
-          setLoading({ isLoading: false, message: '', step: 0 });
-          if (!ok) setError(apiError.message || 'Không tải được nội dung từ link này.');
-          return;
-        }
-
-        const meta = payload.meta as VideoMeta;
-        setFileData({
-          file: null,
-          previewUrl: meta.thumbnail || '',
-          type: 'video',
-          base64: '',
-          mimeType: payload.mimeType,
-          url: urlInput,
-          fileUri: payload.fileUri,
-          videoMeta: meta
-        });
-        setLoading({ isLoading: false, message: '', step: 0 });
-        return;
-      }
-
-      let blob: Blob;
-      try {
-        const response = await fetch(urlInput);
-        if (!response.ok) throw new Error('Direct fetch failed');
-        blob = await response.blob();
-      } catch (directError) {
-        try {
-          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(urlInput)}`;
-          const proxyResponse = await fetch(proxyUrl);
-          if (!proxyResponse.ok) throw new Error('Proxy fetch failed');
-          blob = await proxyResponse.blob();
-        } catch (proxyError) {
-          setFileData({
-            file: null,
-            previewUrl: '',
-            type: 'url',
-            base64: '',
-            mimeType: '',
-            url: urlInput
-          });
-          setError("Chuyển sang chế độ đọc Link Web.");
-          setLoading({ isLoading: false, message: '', step: 0 });
-          return;
-        }
-      }
-
-      let mimeType = blob.type;
-      if (!mimeType || mimeType === 'application/octet-stream') {
-        const ext = urlInput.split('.').pop()?.toLowerCase();
-        if (['jpg', 'jpeg'].includes(ext || '')) mimeType = 'image/jpeg';
-        else if (['png'].includes(ext || '')) mimeType = 'image/png';
-        else if (['mov'].includes(ext || '')) mimeType = 'video/quicktime';
-        else if (['mp3', 'wav', 'ogg'].includes(ext || '')) mimeType = 'audio/mpeg';
-        else mimeType = 'video/mp4';
-        blob = blob.slice(0, blob.size, mimeType);
-      }
-
-      const type = mimeType.startsWith('image') ? 'image' : 
-                   mimeType.startsWith('audio') ? 'audio' : 'video';
-
-      const { inlineData } = await fileToGenerativePart(blob);
-      setFileData({
-        file: null,
-        previewUrl: URL.createObjectURL(blob),
-        type,
-        base64: inlineData.data,
-        mimeType: mimeType
+      const { fileData: loaded, warning } = await loadLinkSource(urlInput.trim(), {
+        mode: wantsVideo ? 'video' : 'text',
+        withComments: readComments,
+        onProgress: (message) => setLoading({ isLoading: true, message, step: 1 }),
       });
-
+      setFileData(loaded);
+      if (warning) setError(warning);
     } catch (err: any) {
       console.error(err);
-      setError("Lỗi tải link: " + (err.message || "Vui lòng kiểm tra lại đường dẫn."));
+      setError('Lỗi tải link: ' + (err.message || 'Vui lòng kiểm tra lại đường dẫn.'));
     } finally {
       setLoading({ isLoading: false, message: '', step: 0 });
     }
   };
 
   const handleAnalyze = async () => {
-    const isArticleAnalysis = selectedMode === AnalysisMode.ARTICLE_ANALYSIS;
-    const isTextMode = selectedMode === AnalysisMode.CONTENT_AUDIT || selectedMode === AnalysisMode.SCRIPT_GENERATION || isArticleAnalysis;
+    // Tính năng nào có ô nhập text thì gửi luôn text đó cho model. Trước đây chỗ này
+    // liệt kê tay từng mode nên "Viết bài" và "Chấm điểm bài viết" bị bỏ quên: người
+    // dùng gõ ý tưởng vào ô mà model không nhận được, rồi tự nghĩ ra một chủ đề khác.
+    const isTextMode = featureConfig.sources.includes('text');
 
-    const hasPastedText = featureConfig.sources.includes('text') && !!customUserPrompt.trim();
+    const hasPastedText = isTextMode && !!customUserPrompt.trim();
     const hasScreenshots = featureConfig.sources.includes('images') && articleImages.length > 0;
 
     if (!fileData && !hasPastedText && !hasScreenshots) {
@@ -714,7 +682,7 @@ const App = () => {
     const attachedImages = [
       ...(hasScreenshots ? articleImages.map(({ base64, mimeType }) => ({ base64, mimeType })) : []),
       ...(fileData?.sourceImages || []),
-    ].slice(0, 6);
+    ].slice(0, 10);
 
     try {
       const responseText = await analyzeContent(
@@ -730,10 +698,17 @@ const App = () => {
         selectedFormula,
         fileData?.fileUri,
         fileData?.videoMeta,
-        attachedImages.length ? attachedImages : undefined
+        attachedImages.length ? attachedImages : undefined,
+        undefined,
+        selectedChecklistId ? getChecklist(selectedChecklistId)?.criteria : undefined
       );
       setResult(responseText);
-      
+      recordHistory({
+        kind: 'analysis',
+        html: responseText,
+        sourceUrl: fileData?.url || fileData?.videoMeta?.webpageUrl || urlInput.trim() || undefined,
+      });
+
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -762,6 +737,16 @@ const App = () => {
         activeBrand
       );
       setGeneratedImageUrl(generatedImageBase64);
+
+      const imageBlob = dataUrlToBlob(generatedImageBase64);
+      const caption = thumbnailText.trim() || activeBrand.tagline || activeBrand.name;
+      recordHistory({
+        kind: 'image',
+        title: `Thumbnail — ${caption}`.slice(0, 90),
+        html: `<p>Thumbnail remake tỷ lệ ${aspectRatio} cho ${activeBrand.name}.</p><p>Chữ trên ảnh: ${caption}</p>`,
+        assets: imageBlob ? [{ name: 'thumbnail.png', mimeType: imageBlob.type || 'image/png', blob: imageBlob }] : undefined,
+      });
+
       setTimeout(() => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       }, 100);
@@ -789,7 +774,7 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const slug = (FEATURE_TITLES[selectedMode] || 'ket-qua').toLowerCase().replace(/\s+/g, '-');
+    const slug = featureTitle(selectedMode).toLowerCase().replace(/\s+/g, '-');
     link.download = `${slug}-${activeBrand.name.toLowerCase().replace(/\s+/g, '-')}.txt`;
     link.click();
     URL.revokeObjectURL(url);
@@ -800,7 +785,7 @@ const App = () => {
   };
 
   const handleOpenGoogleSheets = async () => {
-    const title = `${FEATURE_TITLES[selectedMode] || 'Kết quả'} - ${activeBrand.name}`;
+    const title = `${featureTitle(selectedMode)} - ${activeBrand.name}`;
     const copied = await openInGoogleSheets(result, title);
     // Google offers no way to hand data to a brand-new sheet without the user
     // authorising the app, so the paste is the one step left to them.
@@ -885,13 +870,22 @@ const App = () => {
       case 'radar':
         setView('radar');
         break;
-      // Brand DNA and tone of voice both live in the brand profile modal.
+      case 'waterfall':
+        setView('waterfall');
+        break;
+      case 'history':
+        setView('history');
+        break;
+      // Tone of voice is one section inside the brand profile modal, so it
+      // never needed a second door of its own.
       case 'brand-dna':
-      case 'voice':
         setIsBrandModalOpen(true);
         break;
       case 'integrations':
         setView('integrations');
+        break;
+      case 'community':
+        setView('community');
         break;
     }
   };
@@ -915,7 +909,7 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 font-sans antialiased selection:bg-red-500 selection:text-white flex">
+    <div className="min-h-screen bg-white text-slate-800 font-sans antialiased selection:bg-pink-500 selection:text-white flex">
       <Sidebar activeView={sidebarActive} onNavigate={handleNavigate} />
 
       <div className="flex-1 min-w-0 flex flex-col">
@@ -934,40 +928,34 @@ const App = () => {
           <FeatureLauncher onSelectFeature={handleSelectFeature} />
         )}
 
-        {view === 'radar' && <ContentRadar />}
+        {view === 'radar' && <ContentRadar brand={activeBrand} />}
+
+        {view === 'waterfall' && <ContentWaterfall brand={activeBrand} />}
+
+        {view === 'history' && <HistoryPanel brand={activeBrand} />}
 
         {view === 'integrations' && <IntegrationsPanel />}
 
+        {view === 'community' && <CommunityPanel />}
+
         {view === 'overview' && (
           <div className="max-w-5xl">
-            <h1 className="text-[40px] leading-tight font-bold text-slate-900">Tổng quan</h1>
+            <h1 className="text-[40px] leading-tight font-bold text-slate-900">
+              Sản xuất nội dung theo bản sắc thương hiệu
+            </h1>
             <p className="mt-3 text-[15px] text-slate-600">
               Không gian làm việc của {activeBrand.name}.
             </p>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div className="rounded-2xl border border-slate-200 p-6">
-                <p className="text-sm text-slate-500">Brand đang áp dụng</p>
-                <p className="mt-1.5 text-lg font-bold text-slate-900">{activeBrand.name}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 p-6">
-                <p className="text-sm text-slate-500">Số bộ quy tắc đã lưu</p>
-                <p className="mt-1.5 text-lg font-bold text-slate-900">{brandList.length}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 p-6">
-                <p className="text-sm text-slate-500">Giọng văn</p>
-                <p className="mt-1.5 text-lg font-bold text-slate-900 truncate">
-                  {activeBrand.brandVoiceTone || 'Chưa thiết lập'}
-                </p>
-              </div>
+            <div className="mt-8">
+              <OverviewIntro
+                brandName={activeBrand.name}
+                onNavigate={handleNavigate}
+                onOpenBrand={() => setIsBrandModalOpen(true)}
+              />
             </div>
 
-            <button
-              onClick={() => setView('features')}
-              className="mt-8 inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#dc2626] hover:bg-[#c70045] text-white font-semibold transition-colors"
-            >
-              Chọn tính năng <ArrowRight className="w-4 h-4" />
-            </button>
+            <OverviewCommunity onOpenCommunity={() => setView('community')} />
           </div>
         )}
 
@@ -977,19 +965,19 @@ const App = () => {
         {/* BACK TO LIBRARY */}
         <button
           onClick={() => setView('features')}
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#dc2626] transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#A4145E] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Quay lại tính năng
+          <ArrowLeft className="w-4 h-4" /> Quay lại Content Creator
         </button>
 
         {/* FEATURE HEADER */}
         <div className="flex flex-wrap items-start gap-5">
-          <div className="w-[68px] h-[68px] rounded-2xl bg-[#fef2f2] border border-[#f8d3e0] flex items-center justify-center shrink-0">
-            <ActiveFeatureIcon className="w-9 h-9 text-[#dc2626]" strokeWidth={1.5} />
+          <div className="w-[68px] h-[68px] rounded-2xl bg-[#FDF2F7] border border-[#f8d3e0] flex items-center justify-center shrink-0">
+            <ActiveFeatureIcon className="w-9 h-9 text-[#A4145E]" strokeWidth={1.5} />
           </div>
           <div className="flex-1 min-w-[240px]">
             <h1 className="text-[34px] leading-tight font-bold text-slate-900">
-              {FEATURE_TITLES[selectedMode] || 'Phân tích AI'}
+              {featureTitle(selectedMode)}
             </h1>
             <p className="mt-1.5 text-[15px] text-slate-600">{featureConfig.subtitle}</p>
           </div>
@@ -997,7 +985,7 @@ const App = () => {
             <button
               onClick={handleAnalyze}
               disabled={loading.isLoading}
-              className="shrink-0 inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#dc2626] hover:bg-[#c70045] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold transition-colors shadow-sm"
+              className="shrink-0 inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#A4145E] hover:bg-[#86104D] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold transition-colors shadow-sm"
             >
               {loading.isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Đang chạy...</>
@@ -1009,8 +997,8 @@ const App = () => {
         </div>
 
         {featureConfig.available === false ? (
-          <div className="rounded-2xl border border-dashed border-red-300 bg-red-50/40 p-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white border border-red-200 flex items-center justify-center text-red-600 mx-auto mb-4">
+          <div className="rounded-2xl border border-dashed border-pink-300 bg-pink-50/40 p-16 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-white border border-pink-200 flex items-center justify-center text-pink-600 mx-auto mb-4">
               <Wand2 className="w-8 h-8" />
             </div>
             <h3 className="text-lg font-bold text-slate-900">Tính năng đang được phát triển</h3>
@@ -1019,9 +1007,9 @@ const App = () => {
             </p>
             <button
               onClick={() => setView('features')}
-              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#dc2626] text-[#dc2626] font-medium hover:bg-[#fef2f2] transition-colors"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[#A4145E] text-[#A4145E] font-medium hover:bg-[#FDF2F7] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Quay lại danh sách tính năng
+              <ArrowLeft className="w-4 h-4" /> Quay lại Content Creator
             </button>
           </div>
         ) : (
@@ -1051,14 +1039,14 @@ const App = () => {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#dc2626]" />
+                    <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A4145E]" />
                     <input
                       type="text"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleUrlFetch(); } }}
                       placeholder={featureConfig.linkPlaceholder}
-                      className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-10 pr-3 text-sm text-slate-800 focus:outline-none focus:border-[#dc2626] transition-colors placeholder:text-slate-400"
+                      className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-10 pr-3 text-sm text-slate-800 focus:outline-none focus:border-[#A4145E] transition-colors placeholder:text-slate-400"
                       disabled={!!screenStream}
                     />
                   </div>
@@ -1074,6 +1062,21 @@ const App = () => {
                 {loading.isLoading && loading.step === 1 && (
                   <RunStatus compact message={loading.message || 'Đang lấy nội dung...'} startedAt={runStartedAt} />
                 )}
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={readComments}
+                    onChange={(e) => setReadComments(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-[#A4145E] cursor-pointer"
+                    disabled={!!screenStream}
+                  />
+                  Đọc cả bình luận trong bài
+                  {typeof fileData?.commentCount === 'number' && fileData.commentCount > 0 && (
+                    <span className="text-[#A4145E] font-medium">
+                      · đã đọc {fileData.commentCount} bình luận
+                    </span>
+                  )}
+                </label>
                 <p className="text-xs text-slate-500">
                   Nhận link bài viết, ảnh, video, reel trên Facebook, Instagram, Threads, X, TikTok, Douyin, YouTube và link web thường.
                 </p>
@@ -1095,21 +1098,21 @@ const App = () => {
                   {!screenStream ? (
                     <button
                       onClick={startScreenShare}
-                      className="w-full py-3 px-3 rounded-xl border border-dashed border-red-300 bg-red-50/60 hover:bg-red-100/70 text-red-800 flex items-center justify-center gap-2 transition-all text-xs group"
+                      className="w-full py-3 px-3 rounded-xl border border-dashed border-pink-300 bg-pink-50/60 hover:bg-pink-100/70 text-pink-800 flex items-center justify-center gap-2 transition-all text-xs group"
                     >
-                      <Monitor className="w-4 h-4 group-hover:scale-110 transition-transform text-red-600" />
+                      <Monitor className="w-4 h-4 group-hover:scale-110 transition-transform text-pink-600" />
                       <span className="font-semibold">Quay màn hình trực tiếp</span>
                     </button>
                   ) : (
-                    <div className="bg-slate-900 rounded-xl overflow-hidden border border-red-500 shadow-2xl relative">
-                      <div className="bg-red-600 px-3 py-1.5 flex items-center justify-between text-white text-xs font-medium">
+                    <div className="bg-slate-900 rounded-xl overflow-hidden border border-pink-500 shadow-2xl relative">
+                      <div className="bg-pink-600 px-3 py-1.5 flex items-center justify-between text-white text-xs font-medium">
                         <span className="flex items-center gap-1.5"><Monitor className="w-3.5 h-3.5" /> Đang thu màn hình của bạn</span>
-                        <button onClick={stopScreenShare} className="hover:bg-red-700 rounded p-1"><X className="w-3.5 h-3.5" /></button>
+                        <button onClick={stopScreenShare} className="hover:bg-pink-700 rounded p-1"><X className="w-3.5 h-3.5" /></button>
                       </div>
                       <div className="relative aspect-video bg-black">
                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-contain" />
                       </div>
-                      <div className="p-3 bg-slate-900 border-t border-red-900/50 flex justify-center">
+                      <div className="p-3 bg-slate-900 border-t border-pink-900/50 flex justify-center">
                         <Button onClick={captureScreenAndAnalyze} className="w-full text-xs">
                           <Camera className="w-4 h-4 mr-1.5" />
                           Chụp khung hình & phân tích ngay
@@ -1124,10 +1127,10 @@ const App = () => {
               {featureConfig.sources.includes('text') && (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                  <PenTool className="w-3.5 h-3.5 text-[#dc2626]" /> {featureConfig.textLabel}
+                  <PenTool className="w-3.5 h-3.5 text-[#A4145E]" /> {featureConfig.textLabel}
                 </label>
                 <textarea
-                  className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 focus:border-[#dc2626] outline-none h-40 resize-none custom-scrollbar placeholder:text-slate-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 focus:border-[#A4145E] outline-none h-40 resize-none custom-scrollbar placeholder:text-slate-400"
                   placeholder={featureConfig.textPlaceholder}
                   value={customUserPrompt}
                   onChange={(e) => setCustomUserPrompt(e.target.value)}
@@ -1139,9 +1142,9 @@ const App = () => {
               {featureConfig.sources.includes('images') && (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                  <FileImage className="w-3.5 h-3.5 text-[#dc2626]" /> Ảnh chụp bài viết (chọn được nhiều ảnh)
+                  <FileImage className="w-3.5 h-3.5 text-[#A4145E]" /> Ảnh chụp bài viết (chọn được nhiều ảnh)
                 </label>
-                <div className="relative border border-dashed border-red-300 rounded-xl p-4 bg-red-50/40 hover:bg-red-50/70 transition-colors text-center">
+                <div className="relative border border-dashed border-pink-300 rounded-xl p-4 bg-pink-50/40 hover:bg-pink-50/70 transition-colors text-center">
                   <input
                     type="file"
                     accept="image/*"
@@ -1149,7 +1152,7 @@ const App = () => {
                     onChange={(e) => { handleArticleImagesSelect(e.target.files); e.target.value = ''; }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <UploadCloud className="w-6 h-6 text-red-600 mx-auto mb-1.5" />
+                  <UploadCloud className="w-6 h-6 text-pink-600 mx-auto mb-1.5" />
                   <p className="text-xs font-semibold text-slate-800">Kéo thả hoặc chọn ảnh chụp bài viết</p>
                   <p className="text-[11px] text-slate-500 mt-0.5">
                     AI đọc chữ trong ảnh và phân tích cả bố cục, màu sắc
@@ -1161,10 +1164,10 @@ const App = () => {
                     every screenshot twice. */}
                 <div
                   tabIndex={0}
-                  className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-center cursor-text transition-colors outline-none focus:border-[#dc2626] focus:bg-[#fef2f2] hover:border-slate-400"
+                  className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-3 text-center cursor-text transition-colors outline-none focus:border-[#A4145E] focus:bg-[#FDF2F7] hover:border-slate-400"
                 >
                   <div className="flex items-center justify-center gap-2 text-slate-600">
-                    <ClipboardPaste className="w-4 h-4 text-[#dc2626]" />
+                    <ClipboardPaste className="w-4 h-4 text-[#A4145E]" />
                     <span className="text-xs font-semibold">Hoặc bấm vào ô này rồi Ctrl+V để dán ảnh</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
@@ -1187,11 +1190,11 @@ const App = () => {
                 {articleImages.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 pt-1">
                     {articleImages.map((img, i) => (
-                      <div key={img.previewUrl} className="relative group rounded-lg overflow-hidden border border-red-200 bg-white">
+                      <div key={img.previewUrl} className="relative group rounded-lg overflow-hidden border border-pink-200 bg-white">
                         <img src={img.previewUrl} alt={`Ảnh bài viết ${i + 1}`} className="w-full h-20 object-cover" />
                         <button
                           onClick={() => removeArticleImage(i)}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Xóa ảnh này"
                         >
                           <X className="w-3 h-3" />
@@ -1212,7 +1215,7 @@ const App = () => {
                     {fileData.previewUrl && !fileData.videoMeta && (
                       <button
                         onClick={downloadCurrentFile}
-                        className="bg-[#dc2626] hover:bg-[#c70045] text-white p-1.5 rounded-full transition-all shadow-md"
+                        className="bg-[#A4145E] hover:bg-[#86104D] text-white p-1.5 rounded-full transition-all shadow-md"
                         title="Tải về máy"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -1232,7 +1235,7 @@ const App = () => {
                       {fileData.videoMeta.thumbnail ? (
                         <img src={fileData.videoMeta.thumbnail} alt="Thumbnail video gốc" className="w-full aspect-video object-cover bg-slate-950" />
                       ) : (
-                        <div className="aspect-video flex items-center justify-center bg-slate-950 text-red-300">
+                        <div className="aspect-video flex items-center justify-center bg-slate-950 text-pink-300">
                           <Globe className="w-8 h-8" />
                         </div>
                       )}
@@ -1256,7 +1259,7 @@ const App = () => {
                     </div>
                   ) : fileData.sourceText ? (
                     <div className="p-3.5 space-y-2">
-                      <div className="flex items-center gap-1.5 text-[#dc2626]">
+                      <div className="flex items-center gap-1.5 text-[#A4145E]">
                         <FileCheck2 className="w-4 h-4" />
                         <span className="text-[11px] font-bold uppercase tracking-wide">Đã đọc nội dung</span>
                       </div>
@@ -1274,14 +1277,14 @@ const App = () => {
                   ) : fileData.type === 'video' ? (
                     <video src={fileData.previewUrl} controls className="w-full aspect-video object-contain bg-slate-950" />
                   ) : fileData.type === 'audio' ? (
-                    <div className="p-4 flex flex-col items-center justify-center bg-red-50/50 text-red-800 gap-2.5">
-                      <Mic className="w-8 h-8 text-red-500" />
+                    <div className="p-4 flex flex-col items-center justify-center bg-pink-50/50 text-pink-800 gap-2.5">
+                      <Mic className="w-8 h-8 text-pink-500" />
                       <audio src={fileData.previewUrl} controls className="w-full" />
                       <p className="text-[11px] text-slate-500 truncate max-w-full">{fileData.file?.name || 'File âm thanh'}</p>
                     </div>
                   ) : fileData.type === 'url' ? (
-                    <div className="p-4 flex flex-col items-center justify-center bg-red-50/50 text-red-800 gap-2 text-center">
-                      <Globe className="w-8 h-8 text-red-500" />
+                    <div className="p-4 flex flex-col items-center justify-center bg-pink-50/50 text-pink-800 gap-2 text-center">
+                      <Globe className="w-8 h-8 text-pink-500" />
                       <p className="font-bold text-slate-900 text-[13px]">Đã kết nối link nguồn</p>
                       <p className="text-[11px] text-slate-500 break-all font-mono">{fileData.url}</p>
                     </div>
@@ -1305,16 +1308,53 @@ const App = () => {
         {/* ================= STEP 2: TUNING ================= */}
         <SectionCard n={2} title={activeFeature.steps[1][0]} hint={activeFeature.steps[1][1]}>
           <div className="space-y-5">
+            {/* Bộ tiêu chí chấm điểm */}
+            {(selectedMode === AnalysisMode.ARTICLE_SCORING || selectedMode === AnalysisMode.VIDEO_SCORING) && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                    <ClipboardList className="w-3.5 h-3.5 text-[#A4145E]" /> Bộ tiêu chí chấm điểm
+                  </label>
+                  <button
+                    onClick={() => setIsChecklistOpen(true)}
+                    className="text-xs font-semibold text-[#A4145E] hover:underline"
+                  >
+                    Quản lý bộ tiêu chí
+                  </button>
+                </div>
+                <select
+                  value={selectedChecklistId}
+                  onChange={(e) => setSelectedChecklistId(e.target.value)}
+                  className="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:border-[#A4145E] outline-none"
+                >
+                  <option value="">Để hệ thống AI tự chấm điểm</option>
+                  {availableChecklists.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      Chấm theo bộ: {c.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500">
+                  {selectedChecklistId
+                    ? 'AI sẽ chấm đúng theo thang điểm bạn đã viết trong bộ tiêu chí này.'
+                    : availableChecklists.length
+                      ? 'AI tự chấm theo Brand DNA và bộ tiêu chí chuẩn của app. Chọn một bộ ở trên để chấm theo thang điểm riêng của bạn.'
+                      : 'AI tự chấm theo Brand DNA và bộ tiêu chí chuẩn của app. Bấm "Quản lý bộ tiêu chí" để thêm bộ riêng, mỗi bộ thêm vào sẽ hiện thành một lựa chọn ở đây.'}
+                </p>
+              </div>
+            )}
+
             {/* Script Formula Selection */}
-            {(selectedMode === AnalysisMode.REMAKE_SCRIPT || selectedMode === AnalysisMode.SCRIPT_GENERATION) && (
+            {(selectedMode === AnalysisMode.REMAKE_SCRIPT || selectedMode === AnalysisMode.SCRIPT_GENERATION
+              || selectedMode === AnalysisMode.ARTICLE_WRITING) && (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                  <Sigma className="w-3.5 h-3.5 text-[#dc2626]" /> Cấu trúc / công thức kịch bản
+                  <Sigma className="w-3.5 h-3.5 text-[#A4145E]" /> Cấu trúc / công thức triển khai
                 </label>
                 <select
                   value={selectedFormula}
                   onChange={(e) => setSelectedFormula(e.target.value as ScriptFormula)}
-                  className="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:border-[#dc2626] outline-none"
+                  className="w-full bg-white border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:border-[#A4145E] outline-none"
                 >
                   {(Object.keys(FORMULA_LABELS) as ScriptFormula[]).map((f) => (
                     <option key={f} value={f}>{FORMULA_LABELS[f]}</option>
@@ -1326,10 +1366,10 @@ const App = () => {
             {/* Extra Instructions */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                <FilePenLine className="w-3.5 h-3.5 text-[#dc2626]" /> Yêu cầu bổ sung (tùy chọn)
+                <FilePenLine className="w-3.5 h-3.5 text-[#A4145E]" /> Yêu cầu bổ sung (tùy chọn)
               </label>
               <textarea
-                className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 focus:border-[#dc2626] outline-none h-24 resize-none custom-scrollbar placeholder:text-slate-400"
+                className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-sm text-slate-800 focus:border-[#A4145E] outline-none h-24 resize-none custom-scrollbar placeholder:text-slate-400"
                 placeholder="VD: Nhấn mạnh sản phẩm chủ lực, thời lượng dưới 60s, giữ đúng xưng hô của brand..."
                 value={userInstructions}
                 onChange={(e) => setUserInstructions(e.target.value)}
@@ -1401,7 +1441,7 @@ const App = () => {
               </button>
               <button
                 onClick={copyToClipboard}
-                className="text-xs flex items-center gap-1.5 text-white bg-[#dc2626] hover:bg-[#c70045] px-3 py-1.5 rounded-lg font-semibold transition-colors"
+                className="text-xs flex items-center gap-1.5 text-white bg-[#A4145E] hover:bg-[#86104D] px-3 py-1.5 rounded-lg font-semibold transition-colors"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? 'Đã copy' : 'Copy'}
@@ -1425,20 +1465,24 @@ const App = () => {
           ) : result ? (
             <div className="space-y-6">
               {/* Long results simply scroll inside this pane. */}
-              <div className="max-h-[720px] overflow-y-auto custom-scrollbar pr-1">
-                <div className="prose prose-slate max-w-none">
-                  <div
-                    className="font-sans leading-relaxed text-sm space-y-4"
-                    dangerouslySetInnerHTML={{ __html: result }}
-                  />
-                </div>
+              <div className="max-h-[720px] overflow-y-auto overflow-x-auto custom-scrollbar pr-1">
+                {/* `analysis-output` in index.css styles the model's raw HTML.
+                    Tailwind only builds classes it can find in the source, so a
+                    class the model invents at runtime has no CSS at all - real
+                    rules on the tags themselves are what keep the result readable. */}
+                <div
+                  className="analysis-output font-sans"
+                  dangerouslySetInnerHTML={{ __html: result }}
+                />
               </div>
+
+              <BookingNudge />
 
               {/* Thumbnail Remake Section if in THUMBNAIL_AUDIT */}
               {selectedMode === AnalysisMode.THUMBNAIL_AUDIT && (
                 <div className="border-t border-slate-200 pt-6 animate-in fade-in">
-                  <div className="flex items-center gap-2 mb-4 text-red-900">
-                    <Wand2 className="w-5 h-5 text-red-600" />
+                  <div className="flex items-center gap-2 mb-4 text-pink-900">
+                    <Wand2 className="w-5 h-5 text-pink-600" />
                     <h3 className="text-base font-bold">Remake thumbnail cho brand ({activeBrand.name})</h3>
                   </div>
 
@@ -1457,7 +1501,7 @@ const App = () => {
                       <label className="text-xs uppercase text-slate-700 font-bold">2. Tiêu đề chữ nổi trên thumbnail</label>
                       <input
                         type="text"
-                        className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-[#dc2626] outline-none"
+                        className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-[#A4145E] outline-none"
                         placeholder={activeBrand.tagline || 'VD: 1 CHẠM - 12H BẢO VỆ CHUẨN NHẬT...'}
                         value={thumbnailText}
                         onChange={(e) => setThumbnailText(e.target.value)}
@@ -1469,13 +1513,13 @@ const App = () => {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => setAspectRatio('16:9')}
-                          className={`py-2.5 rounded-lg border text-xs font-semibold transition-all ${aspectRatio === '16:9' ? 'bg-[#dc2626] border-[#dc2626] text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}`}
+                          className={`py-2.5 rounded-lg border text-xs font-semibold transition-all ${aspectRatio === '16:9' ? 'bg-[#A4145E] border-[#A4145E] text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}`}
                         >
                           16:9 (YouTube)
                         </button>
                         <button
                           onClick={() => setAspectRatio('9:16')}
-                          className={`py-2.5 rounded-lg border text-xs font-semibold transition-all ${aspectRatio === '9:16' ? 'bg-[#dc2626] border-[#dc2626] text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}`}
+                          className={`py-2.5 rounded-lg border text-xs font-semibold transition-all ${aspectRatio === '9:16' ? 'bg-[#A4145E] border-[#A4145E] text-white' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'}`}
                         >
                           9:16 (TikTok / Reels)
                         </button>
@@ -1500,7 +1544,7 @@ const App = () => {
                   <h4 className="text-emerald-700 text-xs font-bold flex items-center gap-1.5">
                     <Check className="w-4 h-4 text-emerald-600" /> Thumbnail remake hoàn tất
                   </h4>
-                  <div className={`rounded-xl overflow-hidden border-2 border-red-400 relative group mx-auto ${aspectRatio === '9:16' ? 'max-w-[280px]' : 'w-full'}`}>
+                  <div className={`rounded-xl overflow-hidden border-2 border-pink-400 relative group mx-auto ${aspectRatio === '9:16' ? 'max-w-[280px]' : 'w-full'}`}>
                     <img src={generatedImageUrl} alt="Generated Thumbnail" className="w-full h-auto" />
                     <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <a
@@ -1508,7 +1552,7 @@ const App = () => {
                         download={`remake-thumbnail-${activeBrand.name.toLowerCase().replace(/\s+/g, '-')}.png`}
                         className="bg-white text-slate-900 px-5 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 hover:scale-105 transition-transform"
                       >
-                        <Download className="w-4 h-4 text-red-600" /> Tải thumbnail về máy
+                        <Download className="w-4 h-4 text-pink-600" /> Tải thumbnail về máy
                       </a>
                     </div>
                   </div>
@@ -1517,8 +1561,8 @@ const App = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center text-center py-14">
-              <div className="w-14 h-14 rounded-2xl bg-[#fef2f2] border border-[#f8d3e0] flex items-center justify-center mb-3">
-                <Sparkles className="w-7 h-7 text-[#dc2626]" />
+              <div className="w-14 h-14 rounded-2xl bg-[#FDF2F7] border border-[#f8d3e0] flex items-center justify-center mb-3">
+                <Sparkles className="w-7 h-7 text-[#A4145E]" />
               </div>
               <h4 className="text-sm font-bold text-slate-800">Chưa có kết quả</h4>
               <p className="text-xs text-slate-500 max-w-sm mt-1 leading-relaxed">
@@ -1542,7 +1586,17 @@ const App = () => {
           <FeatureRail activeMode={selectedMode} onSelect={handleSelectFeature} />
         )}
         </div>
+
+        {/* Ngoài hàng ngang chứa main và FeatureRail: đặt bên trong đó thì footer
+            thành một cột thứ ba đứng cạnh nội dung, chứ không nằm dưới. */}
+        <AppFooter onOpenCommunity={() => handleNavigate('community')} />
       </div>
+
+      <ChecklistModal
+        isOpen={isChecklistOpen}
+        onClose={() => setIsChecklistOpen(false)}
+        onChanged={() => setChecklistVersion((v) => v + 1)}
+      />
 
       {/* BRAND GUIDELINES MANAGEMENT MODAL */}
       <BrandProfileModal

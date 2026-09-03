@@ -1,7 +1,8 @@
 import { postJson } from './apiClient';
 import { getGeminiApiKey, getPlatformSource, getRadarKeys } from './apiKeyStore';
 import type {
-  RadarContent, RadarCreatorCandidate, RadarScanResult, RadarSortMode, RadarTimeWindow,
+  BrandProfile, RadarContent, RadarCreatorCandidate, RadarPlatform, RadarScanResult,
+  RadarSortMode, RadarTimeWindow,
 } from '../types';
 
 // Client side of Content Radar. Every call here costs money on the server, so
@@ -13,61 +14,104 @@ export interface RadarScanInput {
   timeWindow: RadarTimeWindow;
   limit: number;
   sort: RadarSortMode;
+  /** Floors on the numbers: 0 means no floor. Competitor mode only. */
+  minViews?: number;
+  minLikes?: number;
 }
 
-/** Mode A. One provider run. */
-export const scanByKeyword = (input: RadarScanInput): Promise<RadarScanResult> =>
+export interface RadarKeywordScanInput {
+  platform: RadarPlatform;
+  /** One provider call per keyword, so this list is what a scan costs. */
+  queries: string[];
+  timeWindow: RadarTimeWindow;
+  /** Per keyword, not across the whole scan - it is what the provider takes. */
+  limit: number;
+  sort: RadarSortMode;
+}
+
+/** Mode A. One provider call per keyword; results merged and de-duplicated. */
+export const scanByKeyword = (input: RadarKeywordScanInput): Promise<RadarScanResult> =>
   postJson<RadarScanResult>('/api/radar/search', {
-    platform: 'douyin',
     ...input,
     // Keys the user saved in Tích hợp, by source. Never bundled, never stored
     // on the server - they travel with the request that spends them, and the
     // server picks which source to use.
-    dataKeys: getRadarKeys('douyin'),
-    source: getPlatformSource('douyin') === 'auto' ? '' : getPlatformSource('douyin'),
+    dataKeys: getRadarKeys(input.platform),
+    source: getPlatformSource(input.platform) === 'auto' ? '' : getPlatformSource(input.platform),
     // Used only to translate a non-Chinese keyword; the server falls back to its
     // own key, and to the untranslated keyword, when this is missing.
     apiKey: getGeminiApiKey(),
   });
 
+export type SuggestionTier = 'chinh' | 'phu' | 'mo-rong';
+
 export interface KeywordSuggestion {
   keyword: string;
+  tier: SuggestionTier;
   note: string | null;
+  /** One line on why this keyword is worth a scan. */
+  why: string | null;
 }
 
 /**
- * Turns a broad topic into concrete Chinese search terms. Costs a cheap LLM
- * call and no Apify run, so it is safe to offer before the user commits to a
- * scan - and it still works when the data source is unavailable.
+ * Turns a broad topic into concrete search terms for the chosen platform,
+ * grouped by how broad they are.
+ *
+ * The active brand goes with the request so suggestions fit the user's niche
+ * rather than the topic in the abstract - the difference between "chatgpt" and
+ * "chatgpt cho dân văn phòng". Costs a cheap LLM call and no provider run, so it
+ * stays usable even when the data source is unavailable.
  */
-export const suggestKeywords = (query: string): Promise<{
+export const suggestKeywords = (input: {
+  query: string;
+  platform: RadarPlatform;
+  timeWindow: RadarTimeWindow;
+  brand?: BrandProfile | null;
+  /** 'creator' asks for short terms that match one creator's own captions. */
+  scope?: 'search' | 'creator';
+  /** Captions already on screen, so the ideas come from what they really post. */
+  samples?: string[];
+}): Promise<{
   topic: string;
+  platform: string;
   suggestions: KeywordSuggestion[];
   cached: boolean;
-}> => postJson('/api/radar/suggest-keywords', { query, apiKey: getGeminiApiKey() });
+}> => postJson('/api/radar/suggest-keywords', { ...input, apiKey: getGeminiApiKey() });
 
 /** Mode B step 1. Resolves a pasted profile URL for free; a name costs one run. */
-export const findCreators = (query: string): Promise<{
+export const findCreators = (platform: RadarPlatform, query: string): Promise<{
   platform: string;
   resolved: boolean;
   candidates: RadarCreatorCandidate[];
 }> => postJson('/api/radar/creators', {
-  platform: 'douyin',
+  platform,
   query,
-  dataKeys: getRadarKeys('douyin'),
-  source: getPlatformSource('douyin') === 'auto' ? '' : getPlatformSource('douyin'),
+  dataKeys: getRadarKeys(platform),
+  source: getPlatformSource(platform) === 'auto' ? '' : getPlatformSource(platform),
 });
 
-/** Mode B step 2, after the user has picked a creator. One provider run. */
-export const scanCreator = (input: RadarScanInput & { ref: string }): Promise<RadarScanResult> =>
+/**
+ * Mode B step 2, after the user has picked a creator. One provider run.
+ *
+ * `query` is optional: empty means "their best recent videos", a keyword means
+ * "only what they posted about this topic". Either way it is one call.
+ */
+export const scanCreator = (
+  input: RadarScanInput & { ref: string; platform: RadarPlatform }
+): Promise<RadarScanResult> =>
   postJson<RadarScanResult>('/api/radar/creator-videos', {
-    platform: 'douyin',
+    platform: input.platform,
     ref: input.ref,
+    query: input.query,
+    minViews: input.minViews || 0,
+    minLikes: input.minLikes || 0,
     timeWindow: input.timeWindow,
     limit: input.limit,
     sort: input.sort,
-    dataKeys: getRadarKeys('douyin'),
-    source: getPlatformSource('douyin') === 'auto' ? '' : getPlatformSource('douyin'),
+    dataKeys: getRadarKeys(input.platform),
+    source: getPlatformSource(input.platform) === 'auto' ? '' : getPlatformSource(input.platform),
+    // Only used to translate a keyword aimed at a Douyin creator.
+    apiKey: getGeminiApiKey(),
   });
 
 // ---------------------------------------------------------------------------

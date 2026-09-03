@@ -69,7 +69,7 @@ const server = createServer(async (req, res) => {
     if (pathname === '/api/radar/search') return await handleRadarSearch(req, res, FALLBACK_KEY);
     if (pathname === '/api/radar/suggest-keywords') return await handleRadarSuggest(req, res, FALLBACK_KEY);
     if (pathname === '/api/radar/creators') return await handleRadarCreators(req, res);
-    if (pathname === '/api/radar/creator-videos') return await handleRadarCreatorVideos(req, res);
+    if (pathname === '/api/radar/creator-videos') return await handleRadarCreatorVideos(req, res, FALLBACK_KEY);
     if (pathname === '/api/health') return sendJson(res, 200, serverInfo());
 
     // Any other /api path is a real 404, never the SPA shell - otherwise the

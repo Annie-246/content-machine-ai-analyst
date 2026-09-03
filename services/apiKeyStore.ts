@@ -196,7 +196,7 @@ export const getServerToken = (): string => (loadProviderSettings().serverToken 
 // every actor. A per-platform override exists for the case where someone wants
 // to bill a platform to a separate account.
 
-export type DataProviderId = 'tikhub' | 'apify';
+export type DataProviderId = 'tikhub' | 'apify' | 'google';
 
 export interface DataProviderInfo {
   id: DataProviderId;
@@ -225,6 +225,14 @@ export const DATA_PROVIDERS: DataProviderInfo[] = [
     docsUrl: 'https://console.apify.com/settings/integrations',
     platforms: ['douyin'],
   },
+  {
+    id: 'google',
+    name: 'Google (YouTube Data API)',
+    hint: 'Miễn phí, 10.000 đơn vị quota/ngày (~98 lần quét). Bật YouTube Data API v3 cho project.',
+    keyPrefix: 'AIza',
+    docsUrl: 'https://console.cloud.google.com/apis/credentials',
+    platforms: ['youtube'],
+  },
 ];
 
 /**
@@ -233,6 +241,9 @@ export const DATA_PROVIDERS: DataProviderInfo[] = [
  */
 export const RADAR_PLATFORMS: { id: string; label: string; sources: DataProviderId[] }[] = [
   { id: 'douyin', label: 'Douyin', sources: ['tikhub', 'apify'] },
+  { id: 'tiktok', label: 'TikTok', sources: ['tikhub'] },
+  { id: 'youtube', label: 'YouTube', sources: ['google'] },
+  { id: 'instagram', label: 'Instagram', sources: ['tikhub'] },
 ];
 
 export const getDataProvider = (id: DataProviderId): DataProviderInfo =>

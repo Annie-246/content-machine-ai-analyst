@@ -24,17 +24,17 @@ const IndexRow: React.FC<{
       ${active ? 'bg-[#fef7f8]' : 'hover:bg-slate-50/80'}`}
   >
     <span
-      className={`absolute left-0 top-0 bottom-0 w-[3px] transition-colors ${active ? 'bg-[#dc2626]' : 'bg-transparent'}`}
+      className={`absolute left-0 top-0 bottom-0 w-[3px] transition-colors ${active ? 'bg-[#A4145E]' : 'bg-transparent'}`}
     />
     <span
-      className={`text-sm font-semibold tabular-nums shrink-0 transition-colors ${active ? 'text-[#dc2626]' : 'text-slate-300'}`}
+      className={`text-sm font-semibold tabular-nums shrink-0 transition-colors ${active ? 'text-[#A4145E]' : 'text-slate-300'}`}
     >
       {String(index + 1).padStart(2, '0')}
     </span>
 
     <span className="flex-1 min-w-0">
       <span className="flex items-center gap-2.5 flex-wrap">
-        <span className={`text-[19px] font-bold leading-tight transition-colors ${active ? 'text-[#dc2626]' : 'text-slate-900'}`}>
+        <span className={`text-[19px] font-bold leading-tight transition-colors ${active ? 'text-[#A4145E]' : 'text-slate-900'}`}>
           {feature.title}
         </span>
         {feature.soon && (
@@ -47,7 +47,7 @@ const IndexRow: React.FC<{
     </span>
 
     <ArrowUpRight
-      className={`w-5 h-5 shrink-0 self-center transition-all ${active ? 'text-[#dc2626] translate-x-0' : 'text-slate-300 -translate-x-1 group-hover:translate-x-0'}`}
+      className={`w-5 h-5 shrink-0 self-center transition-all ${active ? 'text-[#A4145E] translate-x-0' : 'text-slate-300 -translate-x-1 group-hover:translate-x-0'}`}
     />
   </button>
 );
@@ -55,12 +55,12 @@ const IndexRow: React.FC<{
 const PreviewPanel: React.FC<{ feature: Feature; onOpen: () => void }> = ({ feature, onOpen }) => {
   const Icon = feature.icon;
   return (
-    <div className="sticky top-8 rounded-3xl border border-[#f8d3e0] bg-gradient-to-b from-[#fef2f2] to-white p-8 overflow-hidden">
+    <div className="sticky top-8 rounded-3xl border border-[#f8d3e0] bg-gradient-to-b from-[#FDF2F7] to-white p-8 overflow-hidden">
       <div className="flex items-start justify-between gap-4">
         <span className="w-20 h-20 rounded-2xl bg-white border border-[#f8d3e0] flex items-center justify-center shrink-0">
-          <Icon className="w-10 h-10 text-[#dc2626]" strokeWidth={1.4} />
+          <Icon className="w-10 h-10 text-[#A4145E]" strokeWidth={1.4} />
         </span>
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#dc2626] bg-white border border-[#f8d3e0] rounded-full px-3 py-1.5">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#A4145E] bg-white border border-[#f8d3e0] rounded-full px-3 py-1.5">
           <Sparkles className="w-3.5 h-3.5" /> {feature.tab === 'video' ? 'Video' : 'Bài viết'}
         </span>
       </div>
@@ -72,7 +72,7 @@ const PreviewPanel: React.FC<{ feature: Feature; onOpen: () => void }> = ({ feat
         {feature.steps.map(([label, hint], i) => (
           <div key={label} className="flex gap-4">
             <div className="flex flex-col items-center shrink-0">
-              <span className="w-8 h-8 rounded-full bg-white border border-[#f0c9d8] text-[#dc2626] flex items-center justify-center text-[13px] font-bold">
+              <span className="w-8 h-8 rounded-full bg-white border border-[#f0c9d8] text-[#A4145E] flex items-center justify-center text-[13px] font-bold">
                 {i + 1}
               </span>
               {i < feature.steps.length - 1 && <span className="w-px flex-1 bg-[#f0c9d8] my-1" />}
@@ -87,7 +87,7 @@ const PreviewPanel: React.FC<{ feature: Feature; onOpen: () => void }> = ({ feat
 
       <button
         onClick={onOpen}
-        className="mt-7 w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-[#dc2626] hover:bg-[#c70045] text-white font-semibold transition-colors"
+        className="mt-7 w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl bg-[#A4145E] hover:bg-[#86104D] text-white font-semibold transition-colors"
       >
         {feature.soon ? 'Xem trước tính năng' : 'Bắt đầu'} <ArrowRight className="w-4 h-4" />
       </button>
@@ -137,12 +137,12 @@ export const FeatureLauncher = ({ onSelectFeature }: { onSelectFeature: (mode: A
                 key={id}
                 onClick={() => { setTab(id); setPreviewMode(null); }}
                 className={`relative inline-flex items-center gap-2 pb-2.5 text-[17px] font-semibold transition-colors
-                  ${active ? 'text-[#dc2626]' : 'text-slate-400 hover:text-slate-700'}`}
+                  ${active ? 'text-[#A4145E]' : 'text-slate-400 hover:text-slate-700'}`}
               >
                 <Icon className="w-[18px] h-[18px]" />
                 {label}
                 <span
-                  className={`absolute left-0 right-0 bottom-0 h-[3px] rounded-full transition-colors ${active ? 'bg-[#dc2626]' : 'bg-transparent'}`}
+                  className={`absolute left-0 right-0 bottom-0 h-[3px] rounded-full transition-colors ${active ? 'bg-[#A4145E]' : 'bg-transparent'}`}
                 />
               </button>
             );
@@ -158,7 +158,7 @@ export const FeatureLauncher = ({ onSelectFeature }: { onSelectFeature: (mode: A
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={tab === 'video' ? 'Tìm tính năng video...' : 'Tìm tính năng bài viết...'}
-              className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#dc2626] transition-colors"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#A4145E] transition-colors"
             />
           </div>
 

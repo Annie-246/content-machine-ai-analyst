@@ -10,14 +10,13 @@
 
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const execFileAsync = promisify(execFile);
 
-const DEBUG_PORT = Number(process.env.DOUYIN_CDP_PORT) || 9333;
 const LAUNCH_TIMEOUT_MS = 20_000;
 const PAGE_WAIT_MS = 9_000;
 // The short-lived cookies in the jar (__ac_nonce) age out well before this.
@@ -50,6 +49,19 @@ export const findBrowser = () => CHROME_CANDIDATES.find((p) => {
 let cached = null;
 let inFlight = null;
 
+/** Chrome writes the port it actually bound to into the profile directory. */
+const readAssignedPort = async (profile) => {
+  const file = path.join(profile, 'DevToolsActivePort');
+  for (let i = 0; i < LAUNCH_TIMEOUT_MS / 300; i++) {
+    try {
+      const port = Number((await readFile(file, 'utf8')).split('\n')[0].trim());
+      if (port > 0) return port;
+    } catch { /* not written yet */ }
+    await sleep(300);
+  }
+  return 0;
+};
+
 const connect = async (port) => {
   for (let i = 0; i < LAUNCH_TIMEOUT_MS / 400; i++) {
     try {
@@ -73,7 +85,8 @@ const mint = async (pageUrl) => {
   const profile = await mkdtemp(path.join(tmpdir(), 'cm-douyin-'));
   const child = spawn(browser, [
     '--headless=new',
-    `--remote-debugging-port=${DEBUG_PORT}`,
+    // 0 means "pick any free port"; the real one is read back below.
+    '--remote-debugging-port=0',
     `--user-data-dir=${profile}`,
     '--no-first-run',
     '--no-default-browser-check',
@@ -86,7 +99,13 @@ const mint = async (pageUrl) => {
 
   let ws = null;
   try {
-    const endpoint = await connect(DEBUG_PORT);
+    const port = await readAssignedPort(profile);
+    if (!port) {
+      console.log('[douyin] trình duyệt không mở được cổng điều khiển');
+      return null;
+    }
+
+    const endpoint = await connect(port);
     if (!endpoint) return null;
 
     ws = new WebSocket(endpoint);
@@ -123,7 +142,10 @@ const mint = async (pageUrl) => {
       urls: ['https://www.douyin.com/', 'https://www.iesdouyin.com/'],
     });
     const cookies = result?.cookies || [];
-    if (!cookies.length) return null;
+    if (!cookies.length) {
+      console.log('[douyin] trình duyệt không nhận được cookie nào từ douyin.com');
+      return null;
+    }
 
     const jarDir = await mkdtemp(path.join(tmpdir(), 'cm-douyin-jar-'));
     const jar = path.join(jarDir, 'cookies.txt');

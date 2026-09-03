@@ -46,10 +46,16 @@ export const ageInHours = (publishedAt, now = Date.now()) => {
   return Math.max(0, (now - t) / 3_600_000);
 };
 
-/** Fresh content scores 1 and halves every RECENCY_HALF_LIFE_HOURS. */
-const recencyScore = (hours) => {
-  if (hours === null) return null;
-  return clamp01(Math.pow(0.5, hours / RECENCY_HALF_LIFE_HOURS));
+/**
+ * Fresh content scores 1 and halves every `halfLife` hours.
+ *
+ * `halfLife === null` means the caller asked for no time window at all, so
+ * recency is not a signal: it returns null and drops out of the weighted total
+ * instead of scoring every video 0 and deflating the whole list.
+ */
+const recencyScore = (hours, halfLife) => {
+  if (hours === null || halfLife === null) return null;
+  return clamp01(Math.pow(0.5, hours / halfLife));
 };
 
 /**
@@ -74,8 +80,11 @@ export const computeSignals = (metrics, followerCount) => {
  * Components whose input is missing are dropped from BOTH the numerator and the
  * weight total, so a provider that cannot report collects yields comparable
  * scores rather than uniformly deflated ones.
+ *
+ * @param {number|null|undefined} halfLifeHours hours for the recency half-life.
+ *   `undefined` keeps the standalone default; `null` scores without recency.
  */
-export const computeRadarScore = (content, now = Date.now()) => {
+export const computeRadarScore = (content, now = Date.now(), halfLifeHours = RECENCY_HALF_LIFE_HOURS) => {
   const metrics = content?.metrics || {};
   const followerCount = content?.creator?.followerCount;
   const signals = computeSignals(metrics, followerCount);
@@ -93,11 +102,13 @@ export const computeRadarScore = (content, now = Date.now()) => {
 
   const components = [
     [RADAR_WEIGHTS.breakout, breakout],
+    // null when the platform does not report views - see RADAR_WEIGHTS.views.
+    [RADAR_WEIGHTS.views, toNumber(metrics.views) === null ? null : logScore(metrics.views, RADAR_CAPS.views)],
     [RADAR_WEIGHTS.likes, toNumber(metrics.likes) === null ? null : logScore(metrics.likes, RADAR_CAPS.likes)],
     [RADAR_WEIGHTS.shares, toNumber(metrics.shares) === null ? null : logScore(metrics.shares, RADAR_CAPS.shares)],
     [RADAR_WEIGHTS.collects, toNumber(metrics.collects) === null ? null : logScore(metrics.collects, RADAR_CAPS.collects)],
     [RADAR_WEIGHTS.comments, toNumber(metrics.comments) === null ? null : logScore(metrics.comments, RADAR_CAPS.comments)],
-    [RADAR_WEIGHTS.recency, recencyScore(hours)],
+    [RADAR_WEIGHTS.recency, recencyScore(hours, halfLifeHours)],
   ];
 
   let weighted = 0;
@@ -128,8 +139,8 @@ export const engagementVolume = (content) => {
 };
 
 /** Attaches radarScore + radarSignals to a normalized content row. */
-export const withRadarScore = (content, now = Date.now()) => ({
+export const withRadarScore = (content, now = Date.now(), halfLifeHours = RECENCY_HALF_LIFE_HOURS) => ({
   ...content,
-  radarScore: computeRadarScore(content, now),
+  radarScore: computeRadarScore(content, now, halfLifeHours),
   radarSignals: computeSignals(content?.metrics, content?.creator?.followerCount),
 });

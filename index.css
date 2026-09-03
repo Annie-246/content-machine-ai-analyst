@@ -8,7 +8,7 @@
 
 @layer base {
   body {
-    @apply bg-[#ffffff] text-slate-800 antialiased selection:bg-red-500 selection:text-white;
+    @apply bg-[#ffffff] text-slate-800 antialiased selection:bg-pink-500 selection:text-white;
   }
 }
 
@@ -33,7 +33,168 @@
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(236, 72, 153, 0.7); 
+  background: rgba(236, 72, 153, 0.7);
+}
+
+/* ---------------------------------------------------------------------------
+   Analysis output
+   The model returns raw HTML that we inject with innerHTML. Tailwind builds
+   only the classes it finds in the source at build time, so any class the
+   model invents on the fly resolves to nothing and the result falls apart.
+   These rules style the tags themselves, so a table stays a readable table
+   whatever classes came back - and they pin the whole block to the light
+   theme, because the model otherwise likes to hand back a dark card.
+   --------------------------------------------------------------------------- */
+.analysis-output {
+  color: #1e293b;
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+.analysis-output > * + * {
+  margin-top: 1rem;
+}
+
+.analysis-output h1,
+.analysis-output h2,
+.analysis-output h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5C0A35;
+}
+
+.analysis-output h4,
+.analysis-output h5,
+.analysis-output h6 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.analysis-output p {
+  margin: 0.5rem 0;
+}
+
+.analysis-output ul,
+.analysis-output ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.analysis-output ul { list-style: disc; }
+.analysis-output ol { list-style: decimal; }
+.analysis-output li { margin: 0.25rem 0; }
+
+.analysis-output a {
+  color: #A4145E;
+  text-decoration: underline;
+}
+
+.analysis-output img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+}
+
+.analysis-output hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid #fecaca;
+}
+
+.analysis-output blockquote {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.875rem;
+  border-left: 3px solid #fca5a5;
+  background: #FDF2F7;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* Tables carry the timelines and breakdowns, so they get real styling rather
+   than trusting whatever utility classes came back. */
+.analysis-output table {
+  width: 100%;
+  margin: 0.75rem 0;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  background: #ffffff;
+}
+
+.analysis-output th,
+.analysis-output td {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #fecaca;
+  text-align: left;
+  vertical-align: top;
+}
+
+.analysis-output th {
+  background: #FBE3EF;
+  color: #5C0A35;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.analysis-output tbody tr:nth-child(even) {
+  background: #fff7f7;
+}
+
+.analysis-output td:empty::after {
+  content: "—";
+  color: #cbd5e1;
+}
+
+/* Force the light theme back on: a dark card or white text inside the result
+   pane reads as a rendering bug next to the rest of the app. */
+.analysis-output [class*="bg-slate-7"],
+.analysis-output [class*="bg-slate-8"],
+.analysis-output [class*="bg-slate-9"],
+.analysis-output [class*="bg-gray-7"],
+.analysis-output [class*="bg-gray-8"],
+.analysis-output [class*="bg-gray-9"],
+.analysis-output [class*="bg-zinc-8"],
+.analysis-output [class*="bg-zinc-9"],
+.analysis-output [class*="bg-neutral-8"],
+.analysis-output [class*="bg-neutral-9"],
+.analysis-output [class*="bg-black"] {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #fecaca !important;
+}
+
+.analysis-output [class*="from-slate-8"],
+.analysis-output [class*="from-slate-9"],
+.analysis-output [class*="via-slate-8"],
+.analysis-output [class*="via-slate-9"],
+.analysis-output [class*="to-slate-8"],
+.analysis-output [class*="to-slate-9"],
+.analysis-output [class*="from-gray-9"],
+.analysis-output [class*="to-gray-9"],
+.analysis-output [class*="from-black"],
+.analysis-output [class*="to-black"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+
+.analysis-output [class*="text-white"],
+.analysis-output [class*="text-slate-1"],
+.analysis-output [class*="text-slate-2"],
+.analysis-output [class*="text-slate-3"],
+.analysis-output [class*="text-gray-1"],
+.analysis-output [class*="text-gray-2"],
+.analysis-output [class*="text-gray-3"],
+.analysis-output [class*="text-zinc-1"],
+.analysis-output [class*="text-zinc-2"] {
+  color: #1e293b !important;
+}
+
+/* Dark headers inside a table keep their emphasis, just in the light palette. */
+.analysis-output thead [class*="text-white"],
+.analysis-output th[class*="text-white"] {
+  color: #5C0A35 !important;
 }
 
 

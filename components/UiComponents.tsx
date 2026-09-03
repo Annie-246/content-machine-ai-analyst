@@ -19,13 +19,13 @@ export const Button = ({
   icon?: React.ElementType;
   title?: string;
 }) => {
-  const baseStyle = "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500";
+  const baseStyle = "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500";
   
   const variants = {
-    primary: "bg-gradient-to-r from-red-500 via-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md shadow-red-500/20 border border-red-400/30 active:scale-[0.98]",
-    secondary: "bg-red-50 hover:bg-red-100 text-red-900 border border-red-200 active:scale-[0.98]",
-    ghost: "bg-transparent hover:bg-red-50 text-slate-700 hover:text-red-900",
-    outline: "bg-white border border-red-300 text-red-800 hover:border-red-500 hover:bg-red-50/50"
+    primary: "bg-gradient-to-r from-pink-500 via-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white shadow-md shadow-pink-500/20 border border-pink-400/30 active:scale-[0.98]",
+    secondary: "bg-pink-50 hover:bg-pink-100 text-pink-900 border border-pink-200 active:scale-[0.98]",
+    ghost: "bg-transparent hover:bg-pink-50 text-slate-700 hover:text-pink-900",
+    outline: "bg-white border border-pink-300 text-pink-800 hover:border-pink-500 hover:bg-pink-50/50"
   };
 
   return (
@@ -91,27 +91,27 @@ export const FeatureCard = ({
       className={`
         relative overflow-hidden group p-4 rounded-xl border text-left transition-all duration-200 w-full h-full
         ${active 
-          ? 'bg-gradient-to-br from-red-50 to-red-50 border-red-400 shadow-md shadow-red-500/10 ring-2 ring-red-400/40' 
-          : 'bg-white border-red-100 hover:border-red-300 hover:bg-red-50/40 shadow-sm'}
+          ? 'bg-gradient-to-br from-pink-50 to-pink-50 border-pink-400 shadow-md shadow-pink-500/10 ring-2 ring-pink-400/40' 
+          : 'bg-white border-pink-100 hover:border-pink-300 hover:bg-pink-50/40 shadow-sm'}
         ${disabled ? 'opacity-35 cursor-not-allowed grayscale' : ''}
       `}
     >
       <div className="flex items-start justify-between mb-2.5">
-        <div className={`p-2.5 rounded-xl inline-block ${active ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-md shadow-red-500/25' : 'bg-red-50 text-red-700 group-hover:text-red-900 border border-red-200'}`}>
+        <div className={`p-2.5 rounded-xl inline-block ${active ? 'bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-md shadow-pink-500/25' : 'bg-pink-50 text-pink-700 group-hover:text-pink-900 border border-pink-200'}`}>
           <IconComponent className="w-5 h-5" />
         </div>
         {badge && (
-          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-100 to-red-100 text-amber-800 border border-amber-300">
+          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-100 to-pink-100 text-amber-800 border border-amber-300">
             {badge}
           </span>
         )}
       </div>
 
-      <h3 className={`font-bold text-sm mb-1 ${active ? 'text-red-950' : 'text-slate-900'}`}>{title}</h3>
+      <h3 className={`font-bold text-sm mb-1 ${active ? 'text-pink-950' : 'text-slate-900'}`}>{title}</h3>
       <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{desc}</p>
       
       {active && (
-        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ec4899]"></div>
+        <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></div>
       )}
     </button>
   );
@@ -148,7 +148,7 @@ export const FileDropzone = ({
         onDrop={handleDrop}
         className={`
           relative border border-dashed rounded-xl p-4 text-center transition-all duration-200 group bg-white
-          ${currentFile ? 'border-red-400 bg-red-50/60' : 'border-red-200 hover:border-red-400 hover:bg-red-50/40'}
+          ${currentFile ? 'border-pink-400 bg-pink-50/60' : 'border-pink-200 hover:border-pink-400 hover:bg-pink-50/40'}
         `}
       >
         <input 
@@ -158,11 +158,11 @@ export const FileDropzone = ({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         />
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${currentFile ? 'bg-red-500 text-white' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${currentFile ? 'bg-pink-500 text-white' : 'bg-pink-50 text-pink-600 border border-pink-200'}`}>
             {currentFile ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
           </div>
           <div className="text-left overflow-hidden">
-             <p className={`text-sm font-medium truncate ${currentFile ? 'text-red-950 font-semibold' : 'text-slate-700'}`}>
+             <p className={`text-sm font-medium truncate ${currentFile ? 'text-pink-950 font-semibold' : 'text-slate-700'}`}>
                {currentFile ? currentFile.name : label}
              </p>
              <p className="text-xs text-slate-500">{currentFile ? 'Đã tải lên thành công' : 'Định dạng PNG, JPG, WEBP'}</p>
@@ -178,7 +178,7 @@ export const FileDropzone = ({
       onDrop={handleDrop}
       className={`
         relative border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-200 bg-white shadow-sm
-        ${currentFile ? 'border-red-400 bg-red-50/40' : 'border-red-200 hover:border-red-400 hover:bg-red-50/20'}
+        ${currentFile ? 'border-pink-400 bg-pink-50/40' : 'border-pink-200 hover:border-pink-400 hover:bg-pink-50/20'}
       `}
     >
       <input 
@@ -191,29 +191,29 @@ export const FileDropzone = ({
       <div className="flex flex-col items-center justify-center gap-2.5">
         {currentFile ? (
           <>
-            <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center text-red-700 mb-1 border border-red-200 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-pink-100 flex items-center justify-center text-pink-700 mb-1 border border-pink-200 shadow-sm">
               {currentFile.type.startsWith('video') ? <FileVideo className="w-7 h-7" /> : 
                currentFile.type.startsWith('audio') ? <FileAudio className="w-7 h-7" /> : 
                <FileImage className="w-7 h-7" />}
             </div>
             <div>
-              <p className="text-red-950 font-bold text-sm truncate max-w-xs">{currentFile.name}</p>
+              <p className="text-pink-950 font-bold text-sm truncate max-w-xs">{currentFile.name}</p>
               <p className="text-xs text-slate-500 mt-0.5">{(currentFile.size / (1024 * 1024)).toFixed(2)} MB</p>
             </div>
-            <p className="text-xs text-red-800 bg-red-50 font-medium px-3 py-1 rounded-full mt-1 border border-red-200">
+            <p className="text-xs text-pink-800 bg-pink-50 font-medium px-3 py-1 rounded-full mt-1 border border-pink-200">
               Nhấp hoặc thả file khác để thay đổi
             </p>
           </>
         ) : (
           <>
-            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-600 group-hover:scale-105 transition-transform border border-red-200 shadow-sm">
-              <UploadCloud className="w-6 h-6 text-red-600" />
+            <div className="w-12 h-12 rounded-2xl bg-pink-50 flex items-center justify-center text-pink-600 group-hover:scale-105 transition-transform border border-pink-200 shadow-sm">
+              <UploadCloud className="w-6 h-6 text-pink-600" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900">{label}</h3>
               <p className="text-xs text-slate-500 mt-1">Hỗ trợ Video (MP4/MOV), Audio (MP3/WAV/Voice), Ảnh (PNG/JPG)</p>
             </div>
-            <span className="text-xs text-red-800 font-semibold bg-red-50 px-3.5 py-1.5 rounded-lg border border-red-200 hover:border-red-400 mt-1 inline-block shadow-sm">
+            <span className="text-xs text-pink-800 font-semibold bg-pink-50 px-3.5 py-1.5 rounded-lg border border-pink-200 hover:border-pink-400 mt-1 inline-block shadow-sm">
               Chọn File Từ Thiết Bị
             </span>
           </>

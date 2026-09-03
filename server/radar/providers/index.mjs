@@ -1,18 +1,26 @@
 // Provider registry.
 //
-// A platform can be served by more than one data source. Douyin has two: TikHub
-// (REST, billed per request) and Apify (actor, billed per row). They return the
+// A platform can be served by more than one data source. They all return the
 // same RadarContent, so everything above this layer is unaffected by which one
 // answers.
 //
 // Order matters: the first source with a usable key wins when the user has not
-// picked one explicitly. TikHub leads because a 20-result scan costs ~$0.01
+// pinned one. Douyin leads with TikHub because a 20-result scan costs ~$0.01
 // there against ~$0.10 on Apify.
 
 import { douyinApifyProvider } from './douyinApify.mjs';
 import { tikhubDouyinProvider } from './tikhubDouyin.mjs';
+import { tiktokTikhubProvider } from './tiktokTikhub.mjs';
+import { instagramTikhubProvider } from './instagramTikhub.mjs';
+import { youtubeProvider } from './youtubeData.mjs';
 
-const PROVIDERS = [tikhubDouyinProvider, douyinApifyProvider];
+const PROVIDERS = [
+  tikhubDouyinProvider,
+  douyinApifyProvider,
+  tiktokTikhubProvider,
+  youtubeProvider,
+  instagramTikhubProvider,
+];
 
 export const getProvidersForPlatform = (platform) =>
   PROVIDERS.filter((p) => p.platform === platform);

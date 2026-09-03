@@ -1,4 +1,4 @@
-import { AnalysisMode, BrandProfile, ScriptFormula, FORMULA_LABELS, VideoMeta } from "../types";
+import { AnalysisMode, BrandProfile, ScriptFormula, FORMULA_LABELS, VideoMeta, WaterfallOptions, WATERFALL_OBJECTIVE_LABELS } from "../types";
 import { getGeminiApiKey, resolveProvider } from "./apiKeyStore";
 import { postJson } from "./apiClient";
 
@@ -128,7 +128,12 @@ Nhiệm vụ của bạn là:
 3. KHÔNG cần gợi ý kịch bản remake hay tư vấn cho brand trong chế độ này, tập trung 100% vào việc phân tích và giải mã video gốc.`;
 
     case AnalysisMode.SCRIPT_EXTRACT:
-      return "Bạn là trợ lý AI chuyên nghiệp về biên tập nội dung, nghe và trích xuất lại chính xác từng câu chữ, mốc thời gian của nội dung gốc.";
+      return `Bạn là trợ lý AI chuyên nghiệp về biên tập nội dung kiêm biên dịch viên. Bạn nghe và trích xuất lại chính xác từng câu chữ, mốc thời gian của nội dung gốc, đồng thời dịch sang tiếng Việt khi nội dung gốc không phải tiếng Việt.
+Nguyên tắc bắt buộc:
+- Phần script gốc giữ NGUYÊN VĂN đúng ngôn ngữ của video: không dịch, không tóm tắt, không sửa văn phong, không bỏ câu đệm.
+- Phần bản dịch là bản dịch tiếng Việt sát nghĩa nhưng tự nhiên như người Việt nói, giữ đúng giọng điệu và sắc thái của người nói, không dịch máy từng từ.
+- Nếu nội dung gốc đã là tiếng Việt thì KHÔNG tạo phần dịch.
+- Tuyệt đối không bịa lời thoại. Đoạn nào nghe không rõ thì ghi [không nghe rõ] ở đúng vị trí đó.`;
 
     case AnalysisMode.ARTICLE_ANALYSIS:
       return `Bạn là Chuyên gia Phân tích Nội dung Số & Tâm lý học Hành vi Người đọc.
@@ -145,6 +150,48 @@ Nguyên tắc bắt buộc:
 - Nếu có hình ảnh đính kèm, phân tích cả phần nhìn: bố cục, chữ trên ảnh, màu sắc, mức ăn khớp với nội dung chữ.
 - TUYỆT ĐỐI KHÔNG bịa số liệu (lượt xem, tương tác, thứ hạng SEO) nếu dữ liệu không được cung cấp.`;
 
+    case AnalysisMode.ARTICLE_WRITING:
+      return `Bạn là Cây bút Nội dung Viral kiêm Chuyên gia Tâm lý Người đọc, viết cho thương hiệu ${brandName}${industrySuffix}.
+Nhiệm vụ: từ một ý tưởng còn thô sơ của người dùng, viết ra bài đăng hoàn chỉnh, đăng được ngay.
+
+BỘ TIÊU CHÍ NGẦM - đây chính là những gì làm nên một bài viết hiệu quả, rút ra từ việc mổ xẻ các bài đang chạy tốt. Bạn PHẢI viết sao cho bài đạt được từng điểm dưới đây, nhưng TUYỆT ĐỐI KHÔNG liệt kê hay giảng giải chúng trong bài:
+1. HOOK: câu đầu tiên phải chặn được ngón tay đang lướt. Nó phải chạm vào một nỗi đau, một nghịch lý, một con số bất ngờ hoặc một điều người đọc tưởng mình đã biết mà hoá ra không phải.
+2. TÂM LÝ: xác định rõ insight thật sự của người đọc, rồi dẫn họ đi qua một chuỗi cảm xúc có chủ đích. Dùng đòn bẩy tâm lý (FOMO, bằng chứng xã hội, khan hiếm, thẩm quyền, đồng cảm, sợ mất mát) đúng chỗ, không rải đều.
+3. GIỮ CHÂN: cứ vài đoạn phải có một lý do để đọc tiếp - một câu hỏi mở, một tiết lộ chưa trọn, một con số chưa giải thích.
+4. CẤU TRÚC: theo đúng công thức người dùng chọn, mạch đọc liền lạc, chuyển ý mượt.
+5. NHỊP ĐIỆU: câu dài xen câu ngắn. Chỗ cao trào thì dồn dập, chỗ cần ngấm thì chậm lại.
+6. TRÌNH BÀY: ngắt đoạn ngắn cho người đọc trên điện thoại. Dùng emoji và gạch đầu dòng có tiết chế, chỉ khi chúng giúp đọc nhanh hơn.
+7. NIỀM TIN: mọi khẳng định phải có chỗ dựa - trải nghiệm, ví dụ cụ thể, lý lẽ chặt. Không nói suông.
+8. CTA: dẫn tới hành động một cách tự nhiên, không gãy mạch cảm xúc.
+
+NGUYÊN TẮC BẤT DI BẤT DỊCH:
+- Viết đúng giọng văn và bản sắc của ${brandName}. Bài phải đọc ra là của thương hiệu này, không phải một bài AI chung chung.
+- TUYỆT ĐỐI KHÔNG bịa số liệu, nghiên cứu, tên người thật hay trích dẫn không có thật. Cần ví dụ thì dùng tình huống chung chung, không gán số liệu giả.
+- Không dùng những cụm sáo rỗng kiểu "trong thời đại 4.0", "chìa khoá thành công", "bí quyết vàng".
+- Viết như người thật đang nói với người thật.`;
+
+    case AnalysisMode.CONTENT_WATERFALL:
+      return `Bạn là Content Atomization & Expansion Engine - chuyên gia bóc tách và nhân bản cơ hội nội dung cho thương hiệu ${brandName}${industrySuffix}.
+
+Nhiệm vụ duy nhất: biến MỘT nguồn thông tin thành NHIỀU cơ hội nội dung khác biệt, chất lượng cao và đúng chất thương hiệu.
+
+ĐÂY KHÔNG PHẢI là việc tóm tắt, viết lại hay đổi cách diễn đạt nguồn. Nhiệm vụ của bạn là tìm ra TIỀM NĂNG NỘI DUNG ẩn bên trong nguồn.
+
+Mỗi ý tưởng phải là giao điểm của 4 thành phần:
+INSIGHT TỪ NGUỒN + NHU CẦU KHÁN GIẢ + SỰ LIÊN QUAN CỦA THƯƠNG HIỆU + GÓC TIẾP CẬN NỘI DUNG.
+Ý tưởng nào không truy ngược được về đủ 4 thành phần này thì loại bỏ.
+
+NGUYÊN TẮC BẤT DI BẤT DỊCH:
+1. KHÔNG bịa dữ kiện về thương hiệu: kinh nghiệm, kết quả, doanh số, số lượng khách hàng, thí nghiệm, case study, chứng chỉ, chuyên môn. Thiếu thông tin thì chọn ý tưởng khái quát mạnh, KHÔNG cá nhân hóa bằng thông tin bịa.
+2. KHÔNG chuyển trải nghiệm của tác giả nguồn thành trải nghiệm của thương hiệu. Ví dụ nguồn viết "Tôi đã test 2.000 mẫu quảng cáo và thấy rằng..." thì TUYỆT ĐỐI KHÔNG viết "Chúng tôi đã test 2.000 mẫu quảng cáo", mà chuyển thành dạng "5 đặc điểm đáng thử trong mẫu quảng cáo tiếp theo của bạn".
+3. Sâu hơn nhiều. Không lấp cho đủ số lượng. Nếu chỉ có 12 ý tưởng mạnh trong khi người dùng xin 20 thì trả về 12, và nói rõ lý do.
+4. Các ý tưởng phải KHÁC BIỆT THẬT SỰ. Hai ý tưởng bị coi là trùng nếu nội dung cuối cùng chồng lấn trên khoảng 70%. Đổi con số, đổi chữ, đổi tính từ, đổi cấu trúc hook KHÔNG tạo ra ý tưởng mới - ý tưởng mới cần khác về vấn đề, câu hỏi, insight, ý định, góc nhìn, tình huống sử dụng, quyết định hoặc kết quả học được.
+5. Tuyệt đối không bịa số liệu, thống kê, chính sách nền tảng hay quy định pháp lý. Thông tin nhạy cảm về thời gian/thị trường/nền tảng phải gắn cờ cần kiểm chứng.
+6. Giọng văn và cách xưng hô bám đúng thương hiệu: ${voice}; người nói xưng "${speaker}", gọi khán giả là "${audience}".
+7. Nếu không đọc được nguồn từ bất kỳ đầu vào nào, PHẢI nói rõ là không truy cập được và dừng lại, KHÔNG tự nghĩ ra nội dung nguồn.
+
+Rõ ràng hơn khôn khéo. Cụ thể hơn thổi phồng. Căng thẳng thật hơn giật tít.`;
+
     case AnalysisMode.THUMBNAIL_AUDIT:
       return `Bạn là Giám Đốc Nghệ Thuật (Art Director) cho thương hiệu ${brandName}${industrySuffix}, chuyên tối ưu tỷ lệ nhấp (CTR) và tính thẩm mỹ của hình ảnh đại diện.`;
 
@@ -153,13 +200,31 @@ Nguyên tắc bắt buộc:
   }
 };
 
+// The answer is injected into the page with innerHTML and Tailwind only ships
+// the classes present in this file at build time. A class the model invents
+// resolves to nothing, which is how a result ends up as an unstyled wall of
+// text - or, when it picks its own palette, as a dark card in a light app.
+const HTML_OUTPUT_RULES = `
+=======================================================
+📐 QUY TẮC ĐỊNH DẠNG HTML BẮT BUỘC (ÁP DỤNG CHO TOÀN BỘ CÂU TRẢ LỜI)
+=======================================================
+- CHỈ trả về mã HTML. Không viết câu dẫn nhập hay lời giải thích nằm ngoài HTML, KHÔNG bọc trong \`\`\`html.
+- KHÔNG dùng <html>, <head>, <body>, <style>, <script>. Chỉ dùng thẻ nội dung: div, h3, h4, h5, p, ul, li, table, thead, tbody, tr, th, td, strong, span, br.
+- BẮT BUỘC LIGHT THEME: nền trắng hoặc đỏ/hồng nhạt, chữ màu tối. TUYỆT ĐỐI KHÔNG dùng nền tối (bg-slate-800, bg-slate-900, bg-slate-950, bg-gray-900, bg-zinc-900, bg-black) và không dùng chữ sáng (text-white, text-slate-100, text-slate-200, text-slate-300). Không dùng biến thể dark:.
+- Ưu tiên dùng lại đúng các class Tailwind có trong khung mẫu ở trên. Nếu cần thêm, chỉ được chọn trong danh sách an toàn sau:
+  bg-white, bg-pink-50, bg-pink-100, bg-slate-50, border, border-pink-100, border-pink-200, border-slate-200, rounded-lg, rounded-xl, rounded-2xl, shadow-sm, p-3, p-4, p-5, mb-2, mb-4, mb-6, mt-2, mt-4, space-y-2, space-y-4, grid, md:grid-cols-2, gap-4, flex, items-center, gap-2, text-xs, text-sm, md:text-sm, text-base, font-medium, font-semibold, font-bold, uppercase, tracking-wider, leading-relaxed, whitespace-pre-line, italic, text-slate-600, text-slate-700, text-slate-800, text-slate-900, text-pink-700, text-pink-800, text-pink-900, text-pink-950, w-full, overflow-x-auto, text-left, border-collapse.
+- Mọi bảng phải có <thead> chứa <th> và <tbody> chứa <td> đầy đủ (không để trống ô, thiếu thì ghi "—") để người dùng xuất được sang Excel/Google Sheets, và luôn bọc bảng trong <div class="overflow-x-auto">.
+=======================================================`;
+
 const getPrompt = (
-  mode: AnalysisMode, 
+  mode: AnalysisMode,
   userPrompt?: string, 
   url?: string, 
   brand?: BrandProfile,
   additionalInstructions?: string,
-  formula?: ScriptFormula
+  formula?: ScriptFormula,
+  waterfall?: WaterfallOptions,
+  checklist?: string
 ): string => {
   const brandGuidelines = formatBrandGuidelines(brand);
   const formulaInstruction = getFormulaInstruction(formula);
@@ -173,6 +238,10 @@ const getPrompt = (
   const extraReqs = additionalInstructions 
     ? `\n\n📌 YÊU CẦU BỔ SUNG ĐẶC BIỆT TỪ NGƯỜI DÙNG: "${additionalInstructions}"` 
     : "";
+
+  // Người dùng có bộ tiêu chí riêng thì bộ đó là luật. Không có thì chấm theo
+  // Brand DNA cộng bộ tiêu chí chuẩn rút ra từ phần phân tích nội dung.
+  const userChecklist = (checklist || '').trim();
 
   switch (mode) {
     case AnalysisMode.REMAKE_SCRIPT:
@@ -221,92 +290,92 @@ const getPrompt = (
       Hãy xuất ra mã HTML sạch (không bọc <html>/<body>), thiết kế tinh tế với Tailwind CSS dành cho Light Theme:
 
       <!-- KHỐI 1: TỔNG QUAN ẤN TƯỢNG -->
-      <div class="mb-6 p-5 bg-white rounded-2xl border border-red-200 shadow-lg">
-        <div class="flex items-center justify-between mb-3 border-b border-red-100 pb-3">
-          <h3 class="text-base font-bold text-red-900 flex items-center gap-2">
+      <div class="mb-6 p-5 bg-white rounded-2xl border border-pink-200 shadow-lg">
+        <div class="flex items-center justify-between mb-3 border-b border-pink-100 pb-3">
+          <h3 class="text-base font-bold text-pink-900 flex items-center gap-2">
             📊 PHẦN 1: BẢNG PHÂN TÍCH CHI TIẾT VIDEO/NỘI DUNG GỐC
           </h3>
-          <span class="text-xs text-red-700 bg-red-50 px-3 py-1 rounded-full border border-red-200 font-medium">
+          <span class="text-xs text-pink-700 bg-pink-50 px-3 py-1 rounded-full border border-pink-200 font-medium">
             Có thể xuất trực tiếp sang Excel / Google Sheets
           </span>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm text-slate-700 mb-5">
-          <div class="p-3.5 bg-red-50/60 rounded-xl border border-red-100">
-            <span class="font-bold text-red-900 block mb-1">🌟 1. Ấn Tượng Tổng Quan:</span>
+          <div class="p-3.5 bg-pink-50/60 rounded-xl border border-pink-100">
+            <span class="font-bold text-pink-900 block mb-1">🌟 1. Ấn Tượng Tổng Quan:</span>
             <p class="leading-relaxed">...</p>
           </div>
-          <div class="p-3.5 bg-red-50/60 rounded-xl border border-red-100">
-            <span class="font-bold text-red-900 block mb-1">🎯 2. Yếu Tố Viral Cốt Lõi:</span>
+          <div class="p-3.5 bg-pink-50/60 rounded-xl border border-pink-100">
+            <span class="font-bold text-pink-900 block mb-1">🎯 2. Yếu Tố Viral Cốt Lõi:</span>
             <p class="leading-relaxed">...</p>
           </div>
         </div>
 
         <!-- BẢNG PHÂN TÍCH HÌNH THỨC & NỘI DUNG (TABLE DÙNG ĐỂ XUẤT EXCEL / GG SHEETS) -->
-        <div class="overflow-x-auto rounded-xl border border-red-200 mb-4">
+        <div class="overflow-x-auto rounded-xl border border-pink-200 mb-4">
           <table class="w-full text-left border-collapse text-xs md:text-sm">
             <thead>
-              <tr class="bg-red-100/80 text-red-950 uppercase tracking-wider text-[11px] font-bold">
-                <th class="p-3 border border-red-200 w-1/4">Hạng Mục Phân Tích</th>
-                <th class="p-3 border border-red-200 w-1/2">Chi Tiết Thực Tế Trong Video Mẫu</th>
-                <th class="p-3 border border-red-200 w-1/4">Chiến Thuật Giữ Chân Khán Giả</th>
+              <tr class="bg-pink-100/80 text-pink-950 uppercase tracking-wider text-[11px] font-bold">
+                <th class="p-3 border border-pink-200 w-1/4">Hạng Mục Phân Tích</th>
+                <th class="p-3 border border-pink-200 w-1/2">Chi Tiết Thực Tế Trong Video Mẫu</th>
+                <th class="p-3 border border-pink-200 w-1/4">Chiến Thuật Giữ Chân Khán Giả</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-red-100 text-slate-700">
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Thumbnail & Bìa Video</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+            <tbody class="bg-white divide-y divide-pink-100 text-slate-700">
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Thumbnail & Bìa Video</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Trang Phục & Tạo Hình Nhân Vật</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Trang Phục & Tạo Hình Nhân Vật</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Khuôn Mặt, Ánh Mắt & Biểu Cảm</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Khuôn Mặt, Ánh Mắt & Biểu Cảm</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Tone Giọng Nói & Tốc Độ (Pacing)</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Tone Giọng Nói & Tốc Độ (Pacing)</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Hành Động, Cử Chỉ & Demo</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Hành Động, Cử Chỉ & Demo</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Bối Cảnh, Góc Máy & Cắt Cảnh</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Bối Cảnh, Góc Máy & Cắt Cảnh</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Text On Screen, BGM & Sound Effect</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Text On Screen, BGM & Sound Effect</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="bg-red-50/80 font-medium hover:bg-red-100/50">
-                <td class="p-3 border border-red-200 font-bold text-red-900">⚡ Hook 3 Giây Đầu Tiên</td>
-                <td class="p-3 border border-red-200 text-red-950 font-semibold">"..."</td>
-                <td class="p-3 border border-red-200 text-red-800">...</td>
+              <tr class="bg-pink-50/80 font-medium hover:bg-pink-100/50">
+                <td class="p-3 border border-pink-200 font-bold text-pink-900">⚡ Hook 3 Giây Đầu Tiên</td>
+                <td class="p-3 border border-pink-200 text-pink-950 font-semibold">"..."</td>
+                <td class="p-3 border border-pink-200 text-pink-800">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-900">⏳ 10 Giây Tiếp Theo</td>
-                <td class="p-3 border border-red-100">"..."</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-900">⏳ 10 Giây Tiếp Theo</td>
+                <td class="p-3 border border-pink-100">"..."</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-purple-900">📖 Triển Khai Thân Bài & Đưa Giải Pháp</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-purple-900">📖 Triển Khai Thân Bài & Đưa Giải Pháp</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-900">🎯 Kết Bài & Lời Kêu Gọi (Ending & CTA)</td>
-                <td class="p-3 border border-red-100">"..."</td>
-                <td class="p-3 border border-red-100 text-slate-500">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-900">🎯 Kết Bài & Lời Kêu Gọi (Ending & CTA)</td>
+                <td class="p-3 border border-pink-100">"..."</td>
+                <td class="p-3 border border-pink-100 text-slate-500">...</td>
               </tr>
             </tbody>
           </table>
@@ -314,86 +383,87 @@ const getPrompt = (
       </div>
 
       <!-- KHỐI 2: KỊCH BẢN REMAKE HOÀN CHỈNH CHO THƯƠNG HIỆU -->
-      <div class="mb-6 p-5 bg-gradient-to-br from-red-50 via-white to-red-50 rounded-2xl border border-red-300 shadow-xl">
-        <div class="flex items-center justify-between mb-4 border-b border-red-200 pb-3">
+      <div class="mb-6 p-5 bg-gradient-to-br from-pink-50 via-white to-pink-50 rounded-2xl border border-pink-300 shadow-xl">
+        <div class="flex items-center justify-between mb-4 border-b border-pink-200 pb-3">
           <div>
-            <h3 class="text-base md:text-lg font-bold text-red-950 flex items-center gap-2">
+            <h3 class="text-base md:text-lg font-bold text-pink-950 flex items-center gap-2">
               🎬 PHẦN 2: KỊCH BẢN REMAKE ĐỘC NHẤT CHO ${brandLabelUpper}
             </h3>
-            <p class="text-xs text-red-700 mt-0.5 font-medium">
+            <p class="text-xs text-pink-700 mt-0.5 font-medium">
               Kế thừa 100% điểm thắng video mẫu + Lồng ghép bản sắc và sản phẩm của <strong>${brandLabel}</strong>
             </p>
           </div>
-          <span class="text-xs px-3 py-1 rounded-full bg-red-100 text-red-800 border border-red-300 font-bold">
+          <span class="text-xs px-3 py-1 rounded-full bg-pink-100 text-pink-800 border border-pink-300 font-bold">
             Chuẩn Giọng ${brandSpeaker} ➔ ${brandAudience}
           </span>
         </div>
 
         <!-- BẢNG PHÂN CẢNH KỊCH BẢN SẢN XUẤT (PRODUCTION SCRIPT) -->
-        <div class="overflow-x-auto rounded-xl border border-red-200 mb-5 shadow-sm">
+        <div class="overflow-x-auto rounded-xl border border-pink-200 mb-5 shadow-sm">
           <table class="w-full text-left border-collapse text-xs md:text-sm">
             <thead>
-              <tr class="bg-red-100/90 text-red-950 uppercase tracking-wider text-[11px] font-bold">
-                <th class="p-3 border border-red-200 w-24">Thời Lượng</th>
-                <th class="p-3 border border-red-200 w-2/5">Lời Thoại (Đúng Giọng & Ngôi Xưng Thương Hiệu)</th>
-                <th class="p-3 border border-red-200 w-1/3">Mô Tả Visual / Hành Động / Góc Máy</th>
-                <th class="p-3 border border-red-200">Biểu Cảm, Chữ Nổi & BGM</th>
+              <tr class="bg-pink-100/90 text-pink-950 uppercase tracking-wider text-[11px] font-bold">
+                <th class="p-3 border border-pink-200 w-24">Thời Lượng</th>
+                <th class="p-3 border border-pink-200 w-2/5">Lời Thoại (Đúng Giọng & Ngôi Xưng Thương Hiệu)</th>
+                <th class="p-3 border border-pink-200 w-1/3">Mô Tả Visual / Hành Động / Góc Máy</th>
+                <th class="p-3 border border-pink-200">Biểu Cảm, Chữ Nổi & BGM</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-red-100 text-slate-700">
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-bold text-red-700">0 - 3s<br/><span class="text-[10px] font-semibold text-slate-400">HOOK VIRAL</span></td>
-                <td class="p-3 border border-red-100 font-medium text-slate-900">...</td>
-                <td class="p-3 border border-red-100 text-slate-600 italic">...</td>
-                <td class="p-3 border border-red-100 text-xs text-red-800 font-medium">...</td>
+            <tbody class="bg-white divide-y divide-pink-100 text-slate-700">
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-bold text-pink-700">0 - 3s<br/><span class="text-[10px] font-semibold text-slate-400">HOOK VIRAL</span></td>
+                <td class="p-3 border border-pink-100 font-medium text-slate-900">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600 italic">...</td>
+                <td class="p-3 border border-pink-100 text-xs text-pink-800 font-medium">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-bold text-amber-700">3 - 12s<br/><span class="text-[10px] font-semibold text-slate-400">NỖI ĐAU/VẤN ĐỀ</span></td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600 italic">...</td>
-                <td class="p-3 border border-red-100 text-xs text-red-800 font-medium">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-bold text-amber-700">3 - 12s<br/><span class="text-[10px] font-semibold text-slate-400">NỖI ĐAU/VẤN ĐỀ</span></td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600 italic">...</td>
+                <td class="p-3 border border-pink-100 text-xs text-pink-800 font-medium">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-bold text-emerald-700">12 - 40s<br/><span class="text-[10px] font-semibold text-slate-400">GIẢI PHÁP & USP</span></td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600 italic">...</td>
-                <td class="p-3 border border-red-100 text-xs text-red-800 font-medium">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-bold text-emerald-700">12 - 40s<br/><span class="text-[10px] font-semibold text-slate-400">GIẢI PHÁP & USP</span></td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600 italic">...</td>
+                <td class="p-3 border border-pink-100 text-xs text-pink-800 font-medium">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-bold text-purple-700">40 - 60s<br/><span class="text-[10px] font-semibold text-slate-400">KẾT & CTA</span></td>
-                <td class="p-3 border border-red-100 font-medium text-slate-900">...</td>
-                <td class="p-3 border border-red-100 text-slate-600 italic">...</td>
-                <td class="p-3 border border-red-100 text-xs text-red-800 font-medium">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-bold text-purple-700">40 - 60s<br/><span class="text-[10px] font-semibold text-slate-400">KẾT & CTA</span></td>
+                <td class="p-3 border border-pink-100 font-medium text-slate-900">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600 italic">...</td>
+                <td class="p-3 border border-pink-100 text-xs text-pink-800 font-medium">...</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- 3 OPTIONS HOOK VIRAL CHUẨN BRAND -->
-        <div class="p-4 bg-white rounded-xl border border-red-200 mb-4 shadow-sm">
-          <h4 class="text-xs font-bold text-red-900 uppercase tracking-wider mb-2.5">
+        <div class="p-4 bg-white rounded-xl border border-pink-200 mb-4 shadow-sm">
+          <h4 class="text-xs font-bold text-pink-900 uppercase tracking-wider mb-2.5">
             🔥 3 Phương Án Hook Mở Đầu (0-3s) Chuẩn Giọng Thương Hiệu:
           </h4>
           <div class="space-y-2 text-xs md:text-sm text-slate-800">
-            <div class="p-2.5 bg-red-50/60 rounded-lg border border-red-100">
-              <strong class="text-red-900">Option 1 (Xoáy nỗi đau/Tò mò):</strong> "..."
+            <div class="p-2.5 bg-pink-50/60 rounded-lg border border-pink-100">
+              <strong class="text-pink-900">Option 1 (Xoáy nỗi đau/Tò mò):</strong> "..."
             </div>
-            <div class="p-2.5 bg-red-50/60 rounded-lg border border-red-100">
-              <strong class="text-red-900">Option 2 (Trải nghiệm thực tế / Demo bất ngờ):</strong> "..."
+            <div class="p-2.5 bg-pink-50/60 rounded-lg border border-pink-100">
+              <strong class="text-pink-900">Option 2 (Trải nghiệm thực tế / Demo bất ngờ):</strong> "..."
             </div>
-            <div class="p-2.5 bg-red-50/60 rounded-lg border border-red-100">
-              <strong class="text-red-900">Option 3 (Cảnh báo sai lầm thường gặp):</strong> "..."
+            <div class="p-2.5 bg-pink-50/60 rounded-lg border border-pink-100">
+              <strong class="text-pink-900">Option 3 (Cảnh báo sai lầm thường gặp):</strong> "..."
             </div>
           </div>
         </div>
 
         <!-- GHI CHÚ ĐẠO DIỄN VÀ FOOTER -->
-        <div class="p-4 bg-white rounded-xl border border-red-200 text-xs text-slate-700 space-y-2 shadow-sm">
-          <p><strong class="text-red-900">🎵 Gợi ý Nhạc nền (BGM) & Hiệu ứng âm thanh:</strong> ...</p>
-          <p><strong class="text-red-900">🎥 Lưu ý về góc máy & ánh sáng khi quay:</strong> ...</p>
-          <p><strong class="text-red-900">📌 Hashtag đề xuất:</strong> ${brandHashtags || '(Tự đề xuất 5-8 hashtag bám sát thương hiệu và chủ đề, không bịa tên chiến dịch không có thật)'}</p>
+        <div class="p-4 bg-white rounded-xl border border-pink-200 text-xs text-slate-700 space-y-2 shadow-sm">
+          <p><strong class="text-pink-900">🎵 Gợi ý Nhạc nền (BGM) & Hiệu ứng âm thanh:</strong> ...</p>
+          <p><strong class="text-pink-900">🎥 Lưu ý về góc máy & ánh sáng khi quay:</strong> ...</p>
+          <p><strong class="text-pink-900">📌 Hashtag đề xuất:</strong> ${brandHashtags || '(Tự đề xuất 5-8 hashtag bám sát thương hiệu và chủ đề, không bịa tên chiến dịch không có thật)'}</p>
         </div>
       </div>
+      ${HTML_OUTPUT_RULES}
       `;
 
 
@@ -427,7 +497,13 @@ ${brandFooter}`
 
       ${extraReqs}
 
-      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch với khung bài đăng mô phỏng mạng xã hội hiện đại chuẩn Light Theme (div class="bg-white rounded-2xl p-6 border border-red-200 shadow-xl text-slate-800").
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch với khung bài đăng mô phỏng mạng xã hội hiện đại chuẩn Light Theme, dùng đúng khung sau:
+
+      <div class="bg-white rounded-2xl p-5 border border-pink-200 shadow-sm text-slate-800">
+        <h3 class="text-base font-bold text-pink-900 mb-4">📱 Bài đăng hoàn chỉnh</h3>
+        <p class="text-sm leading-relaxed whitespace-pre-line">... toàn bộ nội dung bài đăng, giữ nguyên cách xuống dòng và emoji ...</p>
+      </div>
+      ${HTML_OUTPUT_RULES}
       `;
 
     case AnalysisMode.SCRIPT_GENERATION:
@@ -449,7 +525,52 @@ ${brandFooter}`
 
       ${extraReqs}
 
-      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML chứa Bảng Kịch Bản Phân Cảnh (Table Tailwind) và 3 Options Hook mở đầu.
+      =======================================================
+      📑 YÊU CẦU ĐỊNH DẠNG ĐẦU RA (MÃ HTML SẠCH - GIAO DIỆN LIGHT THEME):
+      =======================================================
+      Xuất ra mã HTML sạch theo đúng khung dưới đây (bảng phân cảnh + 3 phương án hook + ghi chú sản xuất):
+
+      <div class="mb-6 p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">
+        <h3 class="text-base font-bold text-pink-950 mb-4">🎬 KỊCH BẢN VIDEO CHO ${brandLabelUpper}</h3>
+
+        <div class="overflow-x-auto rounded-xl border border-pink-200 mb-4">
+          <table class="w-full text-left border-collapse text-xs md:text-sm">
+            <thead>
+              <tr class="bg-pink-100 text-pink-950 uppercase tracking-wider text-[11px] font-bold">
+                <th class="p-3 border border-pink-200 w-24">Thời Lượng</th>
+                <th class="p-3 border border-pink-200 w-2/5">Lời Thoại (Giọng ${brandSpeaker} ➔ ${brandAudience})</th>
+                <th class="p-3 border border-pink-200 w-1/3">Visual / Hành Động / Góc Máy</th>
+                <th class="p-3 border border-pink-200">Chữ Nổi, Biểu Cảm & BGM</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white text-slate-700">
+              <tr>
+                <td class="p-3 border border-pink-100 font-bold text-pink-700">0 - 3s<br/><span class="text-[10px] font-semibold text-slate-600">HOOK</span></td>
+                <td class="p-3 border border-pink-100 font-medium text-slate-900">"..."</td>
+                <td class="p-3 border border-pink-100 text-slate-600 italic">...</td>
+                <td class="p-3 border border-pink-100 text-pink-800">...</td>
+              </tr>
+              <!-- Tiếp tục đủ các phân cảnh cho tới hết video -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-4 bg-pink-50 rounded-xl border border-pink-200 mb-4">
+          <h4 class="text-xs font-bold text-pink-900 uppercase tracking-wider mb-2">🔥 3 Phương Án Hook Mở Đầu (0-3s)</h4>
+          <div class="space-y-2 text-xs md:text-sm text-slate-800">
+            <div class="p-3 bg-white rounded-lg border border-pink-100"><strong class="text-pink-900">Option 1:</strong> "..."</div>
+            <div class="p-3 bg-white rounded-lg border border-pink-100"><strong class="text-pink-900">Option 2:</strong> "..."</div>
+            <div class="p-3 bg-white rounded-lg border border-pink-100"><strong class="text-pink-900">Option 3:</strong> "..."</div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-2">
+          <p><strong class="text-pink-900">🎵 Nhạc nền & hiệu ứng âm thanh:</strong> ...</p>
+          <p><strong class="text-pink-900">🎥 Lưu ý góc máy & ánh sáng:</strong> ...</p>
+          <p><strong class="text-pink-900">📌 Hashtag đề xuất:</strong> ${brandHashtags || '(Tự đề xuất 5-8 hashtag bám sát thương hiệu và chủ đề)'}</p>
+        </div>
+      </div>
+      ${HTML_OUTPUT_RULES}
       `;
 
     case AnalysisMode.DEEP_ANALYSIS:
@@ -501,23 +622,23 @@ ${brandFooter}`
       Hãy xuất ra mã HTML sạch (không bọc <html>/<body>), thiết kế tinh tế với Tailwind CSS dành cho Light Theme:
       
       <!-- KHỐI 1: TỔNG QUAN ẤN TƯỢNG -->
-      <div class="mb-6 p-5 bg-white rounded-2xl border border-red-200 shadow-sm text-slate-800">
-        <div class="flex items-center justify-between mb-4 border-b border-red-100 pb-3">
-          <h3 class="text-base font-bold text-red-950 flex items-center gap-2">
+      <div class="mb-6 p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">
+        <div class="flex items-center justify-between mb-4 border-b border-pink-100 pb-3">
+          <h3 class="text-base font-bold text-pink-950 flex items-center gap-2">
             🔍 BÁO CÁO PHÂN TÍCH SÂU & GIẢI MÃ VIDEO VIRAL
           </h3>
-          <span class="text-xs text-red-700 bg-red-50 px-3 py-1 rounded-full border border-red-200 font-semibold">
+          <span class="text-xs text-pink-700 bg-pink-50 px-3 py-1 rounded-full border border-pink-200 font-semibold">
             Bóc tách 100% Video Gốc
           </span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm text-slate-700 mb-5">
-          <div class="p-3.5 bg-red-50/60 rounded-xl border border-red-100">
-            <span class="font-bold text-red-900 block mb-1">🌟 1. Ấn Tượng Tổng Quan:</span>
+          <div class="p-3.5 bg-pink-50/60 rounded-xl border border-pink-100">
+            <span class="font-bold text-pink-900 block mb-1">🌟 1. Ấn Tượng Tổng Quan:</span>
             <p class="leading-relaxed">...</p>
           </div>
-          <div class="p-3.5 bg-red-50/60 rounded-xl border border-red-100">
-            <span class="font-bold text-red-900 block mb-1">🎯 2. Đòn Bẩy Giữ Chân Cốt Lõi:</span>
+          <div class="p-3.5 bg-pink-50/60 rounded-xl border border-pink-100">
+            <span class="font-bold text-pink-900 block mb-1">🎯 2. Đòn Bẩy Giữ Chân Cốt Lõi:</span>
             <p class="leading-relaxed">...</p>
           </div>
         </div>
@@ -526,75 +647,75 @@ ${brandFooter}`
         <h4 class="font-bold text-sm text-slate-900 mb-2 flex items-center gap-1.5">
           📋 Phân Tích Chi Tiết 8 Yếu Tố Hình Thức & 4 Khâu Cấu Trúc
         </h4>
-        <div class="overflow-x-auto rounded-xl border border-red-200 mb-6 shadow-xs">
+        <div class="overflow-x-auto rounded-xl border border-pink-200 mb-6 shadow-xs">
           <table class="w-full text-left border-collapse text-xs md:text-sm">
             <thead>
-              <tr class="bg-red-100/90 text-red-950 uppercase tracking-wider text-[11px] font-bold">
-                <th class="p-3 border border-red-200 w-1/4">Yếu Tố Bóc Tách</th>
-                <th class="p-3 border border-red-200 w-1/2">Hiện Trạng Thực Tế Trong Video</th>
-                <th class="p-3 border border-red-200 w-1/4">Hiệu Ứng Tâm Lý / Giữ Chân</th>
+              <tr class="bg-pink-100/90 text-pink-950 uppercase tracking-wider text-[11px] font-bold">
+                <th class="p-3 border border-pink-200 w-1/4">Yếu Tố Bóc Tách</th>
+                <th class="p-3 border border-pink-200 w-1/2">Hiện Trạng Thực Tế Trong Video</th>
+                <th class="p-3 border border-pink-200 w-1/4">Hiệu Ứng Tâm Lý / Giữ Chân</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-red-100 text-slate-700">
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Thumbnail & Bìa Video</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+            <tbody class="bg-white divide-y divide-pink-100 text-slate-700">
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Thumbnail & Bìa Video</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Trang Phục & Tạo Hình</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Trang Phục & Tạo Hình</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Khuôn Mặt & Ánh Mắt</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Khuôn Mặt & Ánh Mắt</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Giọng Nói & Nhịp Điệu (Pacing)</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Giọng Nói & Nhịp Điệu (Pacing)</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Cử Chỉ & Thao Tác Demo</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Cử Chỉ & Thao Tác Demo</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Persona & Hình Tượng</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Persona & Hình Tượng</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Góc Máy, Bối Cảnh & Cắt Cảnh</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Góc Máy, Bối Cảnh & Cắt Cảnh</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Text on Screen, BGM & SFX</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Text on Screen, BGM & SFX</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Hook 3 Giây Đầu</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Hook 3 Giây Đầu</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">10 Giây Đầu Tiên</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">10 Giây Đầu Tiên</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Triển Khai Thân Bài</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Triển Khai Thân Bài</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-semibold text-red-800">Đoạn Kết & CTA</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-semibold text-pink-800">Đoạn Kết & CTA</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
             </tbody>
           </table>
@@ -603,24 +724,24 @@ ${brandFooter}`
         <!-- BẢNG BÓC TÁCH TOÀN BỘ KỊCH BẢN VIDEO GỐC -->
         <h4 class="font-bold text-sm text-slate-900 mb-2 flex items-center justify-between">
           <span>🎬 Bảng Bóc Tách Toàn Bộ Kịch Bản Gốc Từng Giây (Full Script Timeline)</span>
-          <span class="text-[11px] text-red-700 font-normal">Hỗ trợ copy/xuất sang bảng tính</span>
+          <span class="text-[11px] text-pink-700 font-normal">Hỗ trợ copy/xuất sang bảng tính</span>
         </h4>
-        <div class="overflow-x-auto rounded-xl border border-red-200 mb-4 shadow-xs">
+        <div class="overflow-x-auto rounded-xl border border-pink-200 mb-4 shadow-xs">
           <table class="w-full text-left border-collapse text-xs md:text-sm">
             <thead>
-              <tr class="bg-red-100/80 text-red-950 uppercase tracking-wider text-[11px] font-bold">
-                <th class="p-3 border border-red-200 w-24">Timeline</th>
-                <th class="p-3 border border-red-200 w-1/3">Hình Ảnh & Thao Tác (Visual / Action)</th>
-                <th class="p-3 border border-red-200 w-1/3">Lời Thoại & Âm Thanh (Audio / Dialogue)</th>
-                <th class="p-3 border border-red-200">Mục Đích / Kỹ Thuật Giữ Chân</th>
+              <tr class="bg-pink-100/80 text-pink-950 uppercase tracking-wider text-[11px] font-bold">
+                <th class="p-3 border border-pink-200 w-24">Timeline</th>
+                <th class="p-3 border border-pink-200 w-1/3">Hình Ảnh & Thao Tác (Visual / Action)</th>
+                <th class="p-3 border border-pink-200 w-1/3">Lời Thoại & Âm Thanh (Audio / Dialogue)</th>
+                <th class="p-3 border border-pink-200">Mục Đích / Kỹ Thuật Giữ Chân</th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-red-100 text-slate-700">
-              <tr class="hover:bg-red-50/40">
-                <td class="p-3 border border-red-100 font-mono text-red-700 font-bold">00:00 - 00:03</td>
-                <td class="p-3 border border-red-100">...</td>
-                <td class="p-3 border border-red-100 font-medium text-slate-900">"..."</td>
-                <td class="p-3 border border-red-100 text-slate-600">...</td>
+            <tbody class="bg-white divide-y divide-pink-100 text-slate-700">
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-mono text-pink-700 font-bold">00:00 - 00:03</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 font-medium text-slate-900">"..."</td>
+                <td class="p-3 border border-pink-100 text-slate-600">...</td>
               </tr>
               <!-- Tiếp tục toàn bộ các phân cảnh của video -->
             </tbody>
@@ -628,23 +749,260 @@ ${brandFooter}`
         </div>
 
         <!-- TỔNG KẾT CÔNG THỨC VIRAL -->
-        <div class="p-4 bg-gradient-to-r from-red-50 to-red-50 rounded-xl border border-red-200 text-xs md:text-sm text-slate-800 space-y-2">
-          <h5 class="font-bold text-red-950">🧠 Đúc Kết Công Thức Giữ Chân & Tâm Lý Học Của Video:</h5>
+        <div class="p-4 bg-pink-50 rounded-xl border border-pink-200 text-xs md:text-sm text-slate-800 space-y-2">
+          <h5 class="font-bold text-pink-950">🧠 Đúc Kết Công Thức Giữ Chân & Tâm Lý Học Của Video:</h5>
           <p class="leading-relaxed">...</p>
         </div>
       </div>
+      ${HTML_OUTPUT_RULES}
       `;
 
 
     case AnalysisMode.SCRIPT_EXTRACT:
       return `
-      Hãy trích xuất chính xác toàn bộ lời thoại (Transcript) và mốc thời gian của nội dung/video này.
+      Hãy trích xuất chính xác toàn bộ lời thoại (Transcript) kèm mốc thời gian của nội dung/video này, VÀ kèm bản dịch tiếng Việt nếu nội dung gốc không phải tiếng Việt.
 
-      Yêu cầu:
-      - Định dạng HTML dễ đọc, phân đoạn rõ ràng.
-      - Đánh dấu các mốc thời gian quan trọng bằng <strong>.
+      BƯỚC 1 - XÁC ĐỊNH NGÔN NGỮ GỐC
+      Nghe và xác định ngôn ngữ chính đang được nói trong video (VD: tiếng Trung, tiếng Anh, tiếng Hàn, tiếng Thái, tiếng Việt...).
+
+      BƯỚC 2 - TRÌNH BÀY KẾT QUẢ THEO ĐÚNG MỘT TRONG HAI TRƯỜNG HỢP SAU
+
+      ➤ TRƯỜNG HỢP A - NGÔN NGỮ GỐC KHÔNG PHẢI TIẾNG VIỆT:
+      Lập bảng 3 cột: Timeline | Script gốc (ghi rõ tên ngôn ngữ) | Bản dịch tiếng Việt.
+      - Mỗi dòng là một câu hoặc một ý trọn vẹn theo mốc thời gian, đi hết video từ giây đầu đến giây cuối, KHÔNG bỏ sót đoạn nào.
+      - Cột giữa: nguyên văn tiếng gốc, TUYỆT ĐỐI không dịch ở cột này.
+      - Cột phải: bản dịch tiếng Việt của ĐÚNG dòng đó, nằm ngang hàng với câu gốc.
+      Sau bảng, thêm hai khối văn bản liền mạch để người dùng copy nhanh:
+      "📄 Script gốc (full)" - toàn bộ lời thoại gốc viết liền mạch, không có mốc thời gian.
+      "📄 Bản dịch tiếng Việt (full)" - toàn bộ bản dịch viết liền mạch, không có mốc thời gian.
+
+      ➤ TRƯỜNG HỢP B - NGÔN NGỮ GỐC LÀ TIẾNG VIỆT:
+      Lập bảng 2 cột: Timeline | Script (nguyên văn). KHÔNG tạo cột dịch, KHÔNG dịch sang ngôn ngữ khác.
+      Sau bảng, thêm một khối "📄 Script full" viết liền mạch.
       ${extraReqs}
+
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch với style Tailwind theo khung dưới đây (ví dụ cho TRƯỜNG HỢP A - hãy thay tên ngôn ngữ cho đúng, bỏ cột thứ ba nếu rơi vào TRƯỜNG HỢP B):
+
+      <div class="space-y-4">
+        <p class="text-sm text-slate-700"><strong>Ngôn ngữ gốc:</strong> ... — <strong>Thời lượng:</strong> ...</p>
+
+        <div class="overflow-x-auto rounded-xl border border-pink-200 shadow-xs">
+          <table class="w-full text-left border-collapse text-xs md:text-sm">
+            <thead>
+              <tr class="bg-pink-100/80 text-pink-950 uppercase tracking-wider text-[11px] font-bold">
+                <th class="p-3 border border-pink-200 w-24">Timeline</th>
+                <th class="p-3 border border-pink-200 w-1/2">Script gốc (tiếng ...)</th>
+                <th class="p-3 border border-pink-200 w-1/2">Bản dịch tiếng Việt</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-pink-100 text-slate-700">
+              <tr class="hover:bg-pink-50/40">
+                <td class="p-3 border border-pink-100 font-mono text-pink-700 font-bold">00:00 - 00:04</td>
+                <td class="p-3 border border-pink-100">...</td>
+                <td class="p-3 border border-pink-100 text-slate-900">...</td>
+              </tr>
+              <!-- Tiếp tục toàn bộ các câu thoại của video -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <h5 class="font-bold text-slate-900 mb-2 text-sm">📄 Script gốc (full)</h5>
+            <p class="text-xs md:text-sm leading-relaxed whitespace-pre-line">...</p>
+          </div>
+          <div class="p-4 bg-pink-50 rounded-xl border border-pink-200">
+            <h5 class="font-bold text-pink-950 mb-2 text-sm">📄 Bản dịch tiếng Việt (full)</h5>
+            <p class="text-xs md:text-sm leading-relaxed whitespace-pre-line">...</p>
+          </div>
+        </div>
+      </div>
+      ${HTML_OUTPUT_RULES}
       `;
+
+    case AnalysisMode.CONTENT_WATERFALL: {
+      const ideaCount = waterfall?.ideaCount || 15;
+      const channels = (waterfall?.channels || '').trim();
+      const objective = waterfall?.objective || 'auto';
+      const objectiveLine = objective === 'auto'
+        ? 'Tự chọn mục tiêu tự nhiên nhất cho TỪNG ý tưởng. Không ép mọi nội dung về chuyển đổi.'
+        : `Ưu tiên các ý tưởng phục vụ mục tiêu: ${WATERFALL_OBJECTIVE_LABELS[objective]}. Vẫn được phép gán mục tiêu khác cho ý tưởng nào thật sự phù hợp hơn.`;
+
+      return `
+      Dưới đây là MỘT nguồn thông tin. Hãy bung nó thành một BẢN ĐỒ CƠ HỘI NỘI DUNG cho thương hiệu ${brandLabel}.
+
+      ${brandGuidelines}
+
+      =======================================================
+      📥 NGUỒN ĐẦU VÀO
+      =======================================================
+      - NỘI DUNG NGUỒN (text dán trực tiếp): "${userPrompt || '(Không dán text - hãy đọc từ link, ảnh hoặc file đính kèm ở trên)'}"
+      ${url ? `- LINK NGUỒN: ${url}` : ''}
+      - Nguồn có thể là: bài đăng mạng xã hội, bài báo, tin tức, transcript video/podcast, báo cáo, case study, nội dung của đối thủ, câu chuyện khách hàng, nghiên cứu, tài liệu, ghi chú thô, phỏng vấn, hoặc nội dung đã trích xuất từ link.
+      - Nếu có ẢNH hoặc FILE VIDEO/AUDIO đính kèm ở trên: đọc và nghe toàn bộ, coi đó là một phần chính thức của nguồn.
+
+      =======================================================
+      ⚙️ THAM SỐ CHẠY
+      =======================================================
+      - SỐ Ý TƯỞNG YÊU CẦU: ${ideaCount} (đây là mức TRẦN, không phải chỉ tiêu. Chỉ có bao nhiêu ý tưởng mạnh thì trả bấy nhiêu.)
+      - KÊNH & ĐỊNH DẠNG ƯU TIÊN: ${channels || '(Không chỉ định - tự chọn kênh và format phù hợp nhất với từng ý tưởng)'}
+      - MỤC TIÊU NỘI DUNG: ${objectiveLine}
+      ${extraReqs}
+
+      =======================================================
+      🧠 QUY TRÌNH TƯ DUY BẮT BUỘC (làm thầm, KHÔNG in ra các bước trung gian)
+      =======================================================
+
+      BƯỚC 1 - BÓC TÁCH CONTENT ATOM
+      Tách nguồn thành các đơn vị ý nghĩa nhỏ nhất: dữ kiện, số liệu, quan sát, quan điểm, lập luận, insight, bài học, trải nghiệm, sai lầm, thất bại, thành công, nguyên nhân, hệ quả, quy luật, mâu thuẫn, đánh đổi, rủi ro, cơ hội, câu hỏi, phương pháp, quy trình, khung tư duy, nguyên tắc, lầm tưởng, cảnh báo, quyết định, so sánh, trước/sau, hành vi khách hàng, hành vi ngành, thay đổi thị trường, cơ chế nền tảng, hệ quả kinh doanh/vận hành, insight tâm lý, ý đáng trích dẫn, ý phản trực giác, câu hỏi còn bỏ ngỏ.
+      LƯU Ý: Một đoạn văn có thể chứa nhiều atom. Nhiều đoạn văn có thể chỉ chứa một atom. KHÔNG mặc định mỗi gạch đầu dòng là một atom.
+
+      BƯỚC 2 - TÌM CƠ HỘI NGẦM
+      Không dừng ở những gì nguồn viết ra. Tự hỏi: Điều này hàm ý gì? Nguyên nhân là gì? Hệ quả là gì? Ai hiểu sai sẽ mắc lỗi nào? Insight này ảnh hưởng tới quyết định nào? Nên làm khác đi thế nào? Ai sẽ phản đối và vì sao? Giả định nào đang bị thách thức? Đánh đổi nằm ở đâu? Trước đó xảy ra gì, sau đó xảy ra gì? Cần đo lường gì? Cần ưu tiên gì? Rủi ro ngầm là gì? Cơ hội ngầm là gì? Người mới sẽ hiểu nhầm chỗ nào? Người có kinh nghiệm sẽ để ý điều gì? Câu hỏi tiếp theo là gì? Có thể dựng thành khung tư duy/checklist/bảng so sánh/hướng dẫn ra quyết định nào? Nó phản ánh xu hướng lớn nào?
+      Ý tưởng suy ra phải còn liên kết logic rõ ràng với nguồn, không được bay quá xa khiến nguồn trở nên vô nghĩa.
+
+      BƯỚC 3 - MỞ RỘNG, KHÔNG CHIA CƠ HỌC
+      TUYỆT ĐỐI KHÔNG mặc định "1 mục trong nguồn = 1 ý tưởng". Một insight có thể sinh ra 0, 1 hoặc nhiều ý tưởng khác nhau; nhiều insight có thể gộp lại thành một nội dung mạnh hơn.
+
+      BƯỚC 4 - THỬ NHIỀU GÓC TIẾP CẬN
+      Với mỗi atom tiềm năng, thử các nhóm góc sau (chỉ dùng góc nào thực sự làm ý tưởng tốt hơn, KHÔNG ép mọi atom qua mọi góc):
+      A. Giáo dục: cơ chế hoạt động, vì sao xảy ra, hướng dẫn cho người mới, insight nâng cao, giải thích đơn giản, khung tư duy, nguyên tắc, định nghĩa.
+      B. Giải quyết vấn đề: how-to, từng bước, checklist, xử lý sự cố, chẩn đoán, tối ưu, khắc phục, phòng ngừa, "phải làm gì khi...".
+      C. Ra quyết định: A hay B, khi nào chọn X, khi nào KHÔNG chọn X, cây quyết định, thứ tự ưu tiên, đánh đổi, chi phí và lợi ích, phân bổ nguồn lực.
+      D. Sai lầm & rủi ro: lỗi phổ biến, cảnh báo, kiểu thất bại, chi phí ẩn, dấu hiệu đỏ, điều mọi người hiểu sai, điều không nên làm.
+      E. Góc nhìn: lầm tưởng và sự thật, quan điểm ngược dòng, ý kiến không được lòng số đông, insight phản trực giác, tái định khung, thách thức giả định.
+      F. Bằng chứng & trải nghiệm: case study, mổ xẻ, bài học rút ra, trước/sau, thử nghiệm, cái gì hiệu quả, cái gì thất bại, phân tích quy luật.
+      G. Giá trị thực dụng: template, cheat sheet, checklist, công thức, kho tư liệu, quy trình làm việc, playbook.
+      H. Theo nhóm khán giả: người mới, người có kinh nghiệm, đội nhỏ, đội lớn, người ra quyết định, người trực tiếp làm, khách hàng, người đang ở một giai đoạn cụ thể.
+      I. Hành vi & tâm lý: vì sao người ta hành xử như vậy, tâm lý khách hàng, động lực, sự kháng cự, ma sát khi quyết định, niềm tin, nhận thức, thói quen.
+      J. Tác động kinh doanh: doanh thu, chi phí, biên lợi nhuận, hiệu suất, năng suất, rủi ro, giữ chân, chuyển đổi, tăng trưởng, vận hành, lợi thế cạnh tranh.
+      K. Thời điểm: trước khi bạn..., sau khi bạn..., khi nào nên..., bao lâu một lần..., quá sớm hay quá muộn, dấu hiệu đã đến lúc...
+      L. Thảo luận: tranh luận, câu hỏi, poll, quan điểm nóng, đồng ý/không đồng ý, bạn sẽ chọn gì.
+
+      BƯỚC 5 - BIẾN THÀNH NỘI DUNG MANG BẢN SẮC THƯƠNG HIỆU
+      Với mỗi ý tưởng, tự trả lời: "Vì sao CHÍNH THƯƠNG HIỆU NÀY nên đăng nội dung này?". Câu trả lời phải đến từ chuyên môn, khách hàng, ngành hàng, sản phẩm, phương pháp, định vị, triết lý hoặc khán giả của thương hiệu.
+      Ý tưởng cuối cùng phải giống nội dung mà thương hiệu này tự nhiên sẽ đăng, KHÔNG được giống "bài của người khác gắn thêm tên thương hiệu vào".
+
+      BƯỚC 6 - LOẠI TRÙNG LẶP NGỮ NGHĨA
+      Trước khi chốt, rà lại và bỏ các ý tưởng chồng lấn trên 70%. Đổi con số, đổi chữ, đổi tính từ hay đổi cấu trúc hook KHÔNG tạo ra ý tưởng mới.
+
+      BƯỚC 7 - HOOK
+      Mỗi ý tưởng có ĐÚNG MỘT hook/tiêu đề chính. Hook mạnh thường chứa ít nhất một trong: vấn đề rõ ràng, lợi ích cụ thể, hệ quả quan trọng, khoảng trống tò mò hữu ích, tương phản bất ngờ, sự liên quan rõ với khán giả, câu hỏi mạnh, lời hứa hành động được, rủi ro, căng thẳng khi ra quyết định, chi tiết cụ thể, insight phản trực giác.
+      Tham khảo các cấu trúc: Nỗi đau ("Vì sao [vấn đề] cứ lặp lại dù bạn đã [giải pháp tưởng đúng]?"), Cảnh báo ("Đừng [hành động] trước khi [điều kiện]"), Lầm tưởng và sự thật, Ngược dòng ("Nhiều [thứ tốt] không phải lúc nào cũng tốt hơn"), Câu hỏi ("Nên chọn [A] hay [B]?"), Quyết định ("Khi nào nên [hành động] - và khi nào nên tránh?"), Chẩn đoán ("Nếu đang gặp [triệu chứng], hãy kiểm tra những thứ này trước"), Con số + giá trị cụ thể, Người mới bắt đầu, Ưu tiên ("Nếu chỉ sửa được một thứ, hãy sửa cái này trước"), Chi phí ẩn, Kiểu thất bại ("Bạn đã làm đúng [best practice]. Vì sao vẫn không hiệu quả?"), Trước khi..., So sánh, Kết quả ("Làm sao đạt [kết quả] mà không phải [đánh đổi]"), Tái định khung ("Đừng nghĩ [chủ đề] là X. Hãy nghĩ nó là Y"), Quy luật ("Vì sao những [thứ] hiệu quả nhất thường có chung điểm này"), Tín hiệu ("3 dấu hiệu bạn đã sẵn sàng [bước tiếp theo]"), Đánh đổi, Nhận diện khán giả ("Nếu bạn là [nhóm cụ thể], điều này quan trọng hơn [thứ thường được ưu tiên]").
+      CẤM các kiểu giật tít rỗng: "sự thật gây sốc", "bí mật không ai nói", "thay đổi cuộc đời bạn", "hack đỉnh cao", "game changer", "bạn sẽ không tin nổi", "bí quyết số 1", "gây bão cộng đồng mạng"... trừ khi đó thật sự là chất giọng của thương hiệu này. KHÔNG dùng con số chỉ để tiêu đề trông dễ nhấp hơn. KHÔNG tạo kịch tính giả.
+
+      BƯỚC 8 - CHỌN FORMAT THEO LOGIC
+      KHÔNG gán format ngẫu nhiên. Chọn theo cách ý tưởng được truyền đạt tốt nhất: video ngắn, video talking-head, video demo, video hướng dẫn, video kể chuyện, phỏng vấn, carousel, post một ảnh, post chữ, thread, bài dài, newsletter, infographic, checklist, case study, bài so sánh, FAQ, poll, post tranh luận, meme, đồ họa dữ liệu, template, cẩm nang.
+      CAROUSEL khi cần nhiều ý nối tiếp, có khung tư duy, checklist, các bước hoặc so sánh trực quan. VIDEO NGẮN khi hook mạnh, insight giải thích nhanh được, hoặc demo/cảm xúc/cá tính làm nội dung tốt hơn. POST CHỮ khi giá trị nằm ở lập luận và góc nhìn. CASE STUDY khi có bằng chứng đáng tin để mổ xẻ. INFOGRAPHIC khi quan hệ/con số/quy trình/so sánh dễ hiểu hơn bằng hình. POLL hoặc TRANH LUẬN khi tồn tại nhiều quan điểm hợp lý.
+
+      BƯỚC 9 - GÁN MỤC TIÊU
+      Chọn mục tiêu tự nhiên nhất cho từng ý tưởng: Reach, Engagement, Bình luận, Chia sẻ, Lưu, Giáo dục, Niềm tin, Uy tín chuyên môn, Cân nhắc, Nhận biết sản phẩm, Thu lead, Chuyển đổi, Giữ chân, Cộng đồng.
+
+      BƯỚC 10 - KIỂM TRA TÍNH XÁC THỰC & ĐỘ TƯƠI
+      Gắn cờ VERIFY = "Có" cho mọi nhận định có thể: phụ thuộc thời điểm, phụ thuộc nền tảng, phụ thuộc thị trường, phụ thuộc quốc gia/vùng, phụ thuộc chính sách, nhạy cảm pháp lý, nhạy cảm tài chính, nhạy cảm y tế, không chắc chắn về mặt thống kê, hoặc chỉ dựa vào trải nghiệm cá nhân của tác giả nguồn (quy định nền tảng, thuật toán, giá, phí, quy định pháp luật, số liệu thị trường, thông số sản phẩm, tính năng có sẵn, benchmark ngành, chính sách nhà nước, điều kiện tham gia chương trình).
+      KHÔNG được âm thầm biến thông tin có thể đã lỗi thời thành chân lý vượt thời gian.
+
+      BƯỚC 11 - BỘ LỌC CHẤT LƯỢNG
+      Trước khi đưa ra, chấm mỗi ý tưởng trên 8 tiêu chí: (1) khán giả mục tiêu có thật sự quan tâm không, (2) có truy ngược rõ ràng về nguồn không, (3) thương hiệu này đăng có hợp lý không, (4) có thật sự khác các ý tưởng còn lại không, (5) khán giả thu được gì hữu ích, (6) có đủ chất liệu cho một nội dung thật không, (7) có nâng đỡ được một hook hấp dẫn mà trung thực không, (8) có phục vụ một mục tiêu chiến lược có ý nghĩa không. Loại thẳng ý tưởng yếu.
+
+      =======================================================
+      📏 KHOẢNG CÁCH NỘI DUNG (bắt buộc pha trộn cả 3 mức)
+      =======================================================
+      - TRỰC TIẾP: ý tưởng có sẵn rõ ràng trong nguồn, được đóng khung lại cho khán giả của thương hiệu.
+      - MỞ RỘNG: ý tưởng suy ra từ nguyên nhân, hệ quả, quyết định, quy trình, sai lầm, cách áp dụng, so sánh, hàm ý.
+      - LÂN CẬN CHIẾN LƯỢC: ý tưởng không nói thẳng trong nguồn nhưng được nguồn chống lưng mạnh và rất liên quan tới thương hiệu/khán giả.
+      Tránh những ý tưởng xa tới mức mối liên hệ trở thành suy đoán.
+
+      =======================================================
+      📑 ĐỊNH DẠNG ĐẦU RA (MÃ HTML SẠCH - LIGHT THEME)
+      =======================================================
+      Xuất theo đúng khung dưới đây, đủ 5 mục (mục 5 chỉ xuất khi thật sự có rủi ro cần nêu):
+
+      <div class="p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800 space-y-6">
+
+        <div>
+          <h4 class="font-bold text-pink-900 mb-2">1. 🧬 CONTENT DNA CỦA NGUỒN</h4>
+          <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 space-y-2 text-sm">
+            <p><strong class="text-pink-900">Chủ đề cốt lõi:</strong> ... nguồn này về bản chất nói về điều gì ...</p>
+            <p><strong class="text-pink-900">Các Content Atom giá trị nhất:</strong></p>
+            <ul class="pl-5 space-y-1 text-slate-700"><li>...</li></ul>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-pink-900 mb-2">2. 🌊 CONTENT WATERFALL</h4>
+          <div class="overflow-x-auto rounded-xl border border-pink-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-pink-100 text-pink-950 uppercase tracking-wider font-bold">
+                  <th class="p-3 border border-pink-200">ID</th>
+                  <th class="p-3 border border-pink-200">Hook / Tiêu đề</th>
+                  <th class="p-3 border border-pink-200">Ý tưởng nội dung</th>
+                  <th class="p-3 border border-pink-200">Góc tiếp cận</th>
+                  <th class="p-3 border border-pink-200">Câu hỏi của khán giả</th>
+                  <th class="p-3 border border-pink-200">Định hướng triển khai</th>
+                  <th class="p-3 border border-pink-200">Format</th>
+                  <th class="p-3 border border-pink-200">Mục tiêu</th>
+                  <th class="p-3 border border-pink-200">Bám nguồn ở đâu</th>
+                  <th class="p-3 border border-pink-200">Khoảng cách</th>
+                  <th class="p-3 border border-pink-200">Vì sao hợp brand</th>
+                  <th class="p-3 border border-pink-200">Verify</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white text-slate-700">
+                <tr>
+                  <td class="p-3 border border-pink-100 font-bold text-pink-700">1</td>
+                  <td class="p-3 border border-pink-100 font-semibold text-slate-900">"..."</td>
+                  <td class="p-3 border border-pink-100">... mô tả ngắn gọn concept nội dung ...</td>
+                  <td class="p-3 border border-pink-100">...</td>
+                  <td class="p-3 border border-pink-100">... câu hỏi/vấn đề/nhu cầu cụ thể mà nội dung này trả lời ...</td>
+                  <td class="p-3 border border-pink-100">• ý 1<br/>• ý 2<br/>• ý 3</td>
+                  <td class="p-3 border border-pink-100">...</td>
+                  <td class="p-3 border border-pink-100">...</td>
+                  <td class="p-3 border border-pink-100">... insight nào trong nguồn sinh ra ý tưởng này ...</td>
+                  <td class="p-3 border border-pink-100">Trực tiếp / Mở rộng / Lân cận chiến lược</td>
+                  <td class="p-3 border border-pink-100">... một câu ...</td>
+                  <td class="p-3 border border-pink-100">Không</td>
+                </tr>
+                <!-- Lặp lại đủ số ý tưởng mạnh tìm được, tối đa ${ideaCount}. Ô VERIFY ghi "Có: ..." kèm thứ cần kiểm chứng, hoặc "Không". Không để trống ô nào, thiếu thì ghi "—". -->
+              </tbody>
+            </table>
+          </div>
+          <p class="text-xs text-slate-600 mt-2">Nếu số ý tưởng trả về ít hơn ${ideaCount}, thêm một dòng ghi rõ vì sao nguồn chỉ đủ chất liệu cho bấy nhiêu ý tưởng mạnh.</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-pink-900 mb-2">3. ⭐ CƠ HỘI NÊN LÀM TRƯỚC</h4>
+          <div class="space-y-2 text-sm">
+            <div class="p-3 bg-pink-50 rounded-lg border border-pink-100"><strong class="text-pink-900">#ID - Hook:</strong> ... <br/><strong class="text-pink-900">Vì sao chọn ý tưởng này:</strong> ... (dựa trên mức độ liên quan với khán giả, sức mạnh của hook, độ hợp brand, giá trị chiến lược và tính khác biệt) ...</div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-pink-900 mb-2">4. 🗂️ CỤM NỘI DUNG (CONTENT CLUSTERS)</h4>
+          <p class="text-xs text-slate-600 mb-2">Chỉ gom cụm khi các cụm phản ánh chủ đề chiến lược có thật, không gom cho cân đối hình thức.</p>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <strong class="text-pink-900">Tên cụm</strong>
+              <p class="text-xs text-slate-600 mt-1">Gồm các ID: ... — Vai trò chiến lược của cụm này: ...</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-pink-900 mb-2">5. ⚠️ RỦI RO TỪ NGUỒN</h4>
+          <ul class="pl-5 space-y-1 text-sm text-slate-700">
+            <li><strong>Cần kiểm chứng trước khi đăng:</strong> ...</li>
+            <li><strong>Trải nghiệm của tác giả nguồn - KHÔNG được gán cho thương hiệu:</strong> ...</li>
+            <li><strong>Thông tin có thể đã lỗi thời:</strong> ...</li>
+            <li><strong>Nhận định thiếu căn cứ / giả định yếu của nguồn:</strong> ...</li>
+          </ul>
+        </div>
+
+      </div>
+      ${HTML_OUTPUT_RULES}
+      `;
+    }
 
     case AnalysisMode.THUMBNAIL_AUDIT:
       return `
@@ -658,7 +1016,131 @@ ${brandFooter}`
       3. 3 Lời khuyên cải tiến cụ thể để phù hợp hơn với thương hiệu ${brand?.name || ''}.
       ${extraReqs}
 
-      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch với style Tailwind.
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch, bọc toàn bộ trong <div class="p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">, tiêu đề từng mục dùng <h4 class="font-bold text-pink-900">.
+      ${HTML_OUTPUT_RULES}
+      `;
+
+    case AnalysisMode.ARTICLE_SCORING:
+    case AnalysisMode.VIDEO_SCORING: {
+      const isVideo = mode === AnalysisMode.VIDEO_SCORING;
+      const what = isVideo ? 'video' : 'bài viết';
+
+      // Hai cách chấm, khác nhau ở chỗ lấy thước đo từ đâu.
+      const rubric = userChecklist
+        ? `
+      BỘ TIÊU CHÍ CỦA NGƯỜI DÙNG - ĐÂY LÀ LUẬT, CHẤM ĐÚNG THEO ĐÂY:
+      """
+      ${userChecklist}
+      """
+
+      CÁCH DÙNG BỘ TIÊU CHÍ NÀY:
+      - Chấm đúng từng tiêu chí người dùng viết ra, theo đúng thang điểm và cách tính họ đặt.
+      - Nếu họ ghi trọng số hay điểm tối đa cho từng mục, tôn trọng tuyệt đối con số đó.
+      - Nếu họ viết dạng đạt/không đạt thì chấm đạt/không đạt, KHÔNG tự đổi sang thang 10.
+      - Nếu họ có mục trừ điểm, áp dụng đúng.
+      - KHÔNG tự thêm tiêu chí ngoài danh sách. Muốn góp ý thêm thì để xuống mục nhận xét cuối.`
+        : `
+      NGƯỜI DÙNG CHƯA NẠP BỘ TIÊU CHÍ RIÊNG. Chấm theo hai nguồn sau, ghi rõ ở đầu báo cáo là đang chấm theo bộ tiêu chí chuẩn:
+
+      A. MỨC ĐỘ KHỚP THƯƠNG HIỆU - đối chiếu trực tiếp với Brand DNA ở trên (40 điểm)
+         - Giọng văn và xưng hô có đúng như thương hiệu quy định không.
+         - Có phạm từ khoá cấm không. Có nói đúng USP không.
+         - Đúng đối tượng người đọc mà thương hiệu nhắm tới không.
+
+      B. CHẤT LƯỢNG NỘI DUNG - theo đúng bộ tiêu chí dùng khi mổ xẻ một ${what} hiệu quả (60 điểm)
+         - Hook: câu/cảnh mở đầu có chặn được người lướt không, thuộc dạng hook nào (15 điểm).
+         - Tâm lý người đọc: có chạm đúng insight, có dùng đòn bẩy tâm lý đúng chỗ không (15 điểm).
+         - Cấu trúc và mạch: bố cục theo công thức nào, chuyển ý có mượt, có chỗ nào tụt nhịp (10 điểm).
+         - Niềm tin: khẳng định có chỗ dựa hay chỉ nói suông (10 điểm).
+         - Trình bày: nhịp câu, ngắt đoạn, đọc trên điện thoại có dễ không (5 điểm).
+         - CTA: có rõ ràng, đặt đúng chỗ, có gãy mạch cảm xúc không (5 điểm).`;
+
+      return `
+      Hãy CHẤM ĐIỂM ${what} dưới đây.
+
+      DỮ LIỆU ĐẦU VÀO:
+      - NỘI DUNG: "${userPrompt || '(Không dán text - hãy đọc từ link, file hoặc ảnh đính kèm)'}"
+      ${url ? `- LINK: ${url}` : ''}
+      - ẢNH / FILE ĐÍNH KÈM: nếu có, đọc hết chữ trong ảnh và tính cả phần trình bày thị giác vào điểm.
+      ${rubric}
+
+      ${extraReqs}
+
+      TRẢ VỀ THEO ĐÚNG THỨ TỰ SAU:
+
+      1. TỔNG ĐIỂM VÀ KẾT LUẬN NHANH
+         Nêu tổng điểm thật to và rõ, kèm một câu kết luận ${what} này đang ở mức nào và vấn đề lớn nhất là gì.
+
+      2. BẢNG CHẤM CHI TIẾT
+         Lập bảng HTML gồm các cột: Tiêu chí | Điểm đạt / Điểm tối đa | Căn cứ chấm (trích nguyên văn) | Nhận xét.
+         Mỗi dòng PHẢI có dẫn chứng trích nguyên văn từ nội dung. Không có dẫn chứng thì ghi rõ "không tìm thấy trong bài" và cho điểm tương ứng.
+
+      3. ĐIỂM MẠNH GIỮ LẠI
+         Những chỗ đang làm tốt, trích nguyên văn, và nói rõ vì sao nên giữ.
+
+      4. GỢI Ý CHỈNH SỬA CỤ THỂ
+         Đây là phần quan trọng nhất. Với mỗi tiêu chí bị mất điểm:
+         - Trích nguyên văn đoạn đang có vấn đề.
+         - Viết lại đoạn đó thành bản tốt hơn, viết thẳng ra câu chữ cụ thể chứ không khuyên chung chung.
+         - Nói rõ sửa như vậy thì lấy lại được bao nhiêu điểm.
+         Sắp xếp theo thứ tự ưu tiên: sửa cái nào trước thì lợi nhất.
+
+      QUY TẮC BẮT BUỘC:
+      - Mọi điểm số PHẢI có căn cứ trích dẫn từ chính nội dung. Không chấm cảm tính.
+      - TUYỆT ĐỐI KHÔNG bịa số liệu tương tác nếu không được cung cấp.
+      - Nếu không đọc được nội dung từ bất kỳ nguồn nào, nói rõ là không truy cập được và dừng lại, KHÔNG tự nghĩ ra nội dung để chấm.
+      - Chấm thẳng thắn. Một bài dở mà được chấm cao thì bản chấm đó vô dụng.
+
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch, bọc toàn bộ trong <div class="p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">.
+      - Tổng điểm bọc trong <div class="p-4 bg-pink-50 rounded-xl border border-pink-200 mb-4"> với con số điểm để <span class="text-base font-bold text-pink-900">.
+      - Mỗi mục mở đầu bằng <h4 class="font-bold text-pink-900">.
+      - Bảng bọc trong <div class="overflow-x-auto">.
+      - Mỗi gợi ý sửa bọc trong <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 mb-2">, phần viết lại để <span class="whitespace-pre-line">.
+      ${HTML_OUTPUT_RULES}
+      `;
+    }
+
+    case AnalysisMode.ARTICLE_WRITING:
+      return `
+      Hãy viết một BÀI ĐĂNG HOÀN CHỈNH cho thương hiệu ${brandLabel}, xuất phát từ ý tưởng thô của người dùng dưới đây.
+
+      Ý TƯỞNG CỦA NGƯỜI DÙNG: "${userPrompt || '(Chưa dán ý tưởng - hãy lấy ý từ link hoặc ảnh đính kèm)'}"
+      ${url ? `- CHẤT LIỆU THAM KHẢO TỪ LINK: ${url}` : ''}
+      - ẢNH ĐÍNH KÈM (nếu có): đọc hết chữ trong ảnh và dùng làm chất liệu.
+
+      CÔNG THỨC TRIỂN KHAI: ${formulaInstruction}
+
+      QUAN TRỌNG: ý tưởng người dùng đưa thường chỉ là vài dòng. Việc của bạn là mở nó ra thành một bài đủ sâu, chứ không phải diễn đạt lại cho dài. Tự bổ sung góc nhìn, ví dụ, lập luận mà một người trong nghề sẽ nghĩ tới - miễn là không bịa số liệu.
+
+      TRẢ VỀ ĐÚNG BA PHẦN THEO THỨ TỰ:
+
+      PHẦN 1 - NĂM HOOK ĐỂ CHỌN
+      Viết 5 hook khác nhau cho cùng bài này, mỗi hook một DẠNG khác nhau để người dùng có cái mà cân:
+      - Một hook chạm nỗi đau trực diện
+      - Một hook mở bằng con số hoặc dữ kiện cụ thể
+      - Một hook nghịch lý, đi ngược điều số đông đang tin
+      - Một hook kể chuyện, mở bằng một khoảnh khắc
+      - Một hook đặt câu hỏi khiến người đọc phải tự soi lại mình
+      Với mỗi hook, thêm một dòng ngắn gọn nói rõ nó đánh vào tâm lý gì. Đánh dấu rõ hook nào bạn cho là mạnh nhất và vì sao.
+
+      PHẦN 2 - BÀI VIẾT HOÀN CHỈNH
+      Dùng hook mạnh nhất vừa chọn để mở bài, rồi viết trọn bài, đăng được ngay không cần sửa. Đúng giọng ${brandLabel}. Kết bằng CTA tự nhiên.
+      Trình bày như một bài đăng thật: xuống dòng thoáng, đoạn ngắn, emoji tiết chế. KHÔNG chèn tiêu đề phân tích kiểu "Thân bài", "Kết luận" vào giữa bài.
+
+      PHẦN 3 - GHI CHÚ CHO NGƯỜI VIẾT
+      Ngắn gọn thôi, để người dùng hiểu bài vừa viết đang chạy theo logic nào:
+      - Công thức đã dùng và mạch cảm xúc dẫn dắt người đọc.
+      - Các đòn bẩy tâm lý đã cài, nằm ở đoạn nào.
+      - Vài hashtag phù hợp.
+      - Một ghi chú về ảnh minh hoạ nên đi kèm.
+
+      ${extraReqs}
+
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch, bọc toàn bộ trong <div class="p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">.
+      - Mỗi phần mở đầu bằng <h4 class="font-bold text-pink-900">.
+      - Mỗi hook bọc trong <div class="p-3 bg-pink-50 rounded-lg border border-pink-100 mb-2">, chữ hook in đậm, dòng giải thích tâm lý để <span class="text-sm text-slate-500">.
+      - Phần bài viết hoàn chỉnh bọc trong <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 whitespace-pre-line leading-relaxed"> để người dùng bôi đen copy được nguyên khối.
+      ${HTML_OUTPUT_RULES}
       `;
 
     case AnalysisMode.ARTICLE_ANALYSIS:
@@ -738,26 +1220,45 @@ ${brandFooter}`
       - Nếu không đọc được nội dung bài viết từ bất kỳ nguồn nào, PHẢI nói rõ là không truy cập được và dừng lại, không được tự nghĩ ra nội dung bài.
       - Không chấm điểm. Không viết lại. Không nhắc thương hiệu của người dùng.
 
-      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch với style Tailwind, dùng thẻ heading rõ ràng cho từng mục, bảng có viền, và làm nổi bật các đoạn trích dẫn nguyên văn bằng nền màu nhạt.
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch, bọc toàn bộ trong <div class="p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">, mỗi mục mở đầu bằng <h4 class="font-bold text-pink-900">, bảng bọc trong <div class="overflow-x-auto">, và làm nổi bật đoạn trích nguyên văn bằng <div class="p-3 bg-pink-50 rounded-lg border border-pink-100 italic">.
+      ${HTML_OUTPUT_RULES}
       `;
 
     default:
-      return `Phân tích nội dung này theo quy tắc thương hiệu: ${brandGuidelines}`;
+      return `Phân tích nội dung này theo quy tắc thương hiệu: ${brandGuidelines}
+      ${HTML_OUTPUT_RULES}`;
   }
 };
 
+// Every mode answers with HTML that goes straight into the page. The model
+// still likes to wrap it: a lead-in sentence, a code fence, sometimes a whole
+// <html> document. Anything left over shows up verbatim in the result pane.
 const cleanResponse = (text: string): string => {
   let cleaned = text.trim();
-  if (cleaned.startsWith("```html")) {
-    cleaned = cleaned.substring(7);
-  } else if (cleaned.startsWith("```")) {
-    cleaned = cleaned.substring(3);
+
+  // Prefer what is inside a code fence, even when a sentence precedes it.
+  const fenced = cleaned.match(/```(?:html)?\s*([\s\S]*?)```/i);
+  if (fenced) {
+    cleaned = fenced[1].trim();
+  } else {
+    // An opening fence with no closing one.
+    cleaned = cleaned.replace(/^```(?:html)?\s*/i, '').replace(/```\s*$/, '').trim();
   }
-  
-  if (cleaned.endsWith("```")) {
-    cleaned = cleaned.substring(0, cleaned.length - 3);
-  }
-  return cleaned.trim();
+
+  // A full document: keep the body only.
+  const body = cleaned.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (body) cleaned = body[1].trim();
+
+  cleaned = cleaned
+    .replace(/<!DOCTYPE[^>]*>/gi, '')
+    .replace(/<\/?(?:html|head|body)[^>]*>/gi, '')
+    // A <style> block injected this way leaks into the whole app, and the model
+    // writes them for a dark card we do not want anyway.
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .trim();
+
+  return cleaned;
 };
 
 const formatCount = (n: number | null): string => {
@@ -808,7 +1309,9 @@ export const analyzeContent = async (
   formula?: ScriptFormula,
   fileUri?: string,
   videoMeta?: VideoMeta,
-  extraImages?: { base64: string; mimeType: string }[]
+  extraImages?: { base64: string; mimeType: string }[],
+  waterfall?: WaterfallOptions,
+  checklist?: string
 ): Promise<string> => {
 
 
@@ -844,7 +1347,7 @@ export const analyzeContent = async (
   }
 
   const systemInstruction = getSystemInstruction(mode, brand);
-  let promptText = getPrompt(mode, userPrompt, url, brand, additionalInstructions, formula);
+  let promptText = getPrompt(mode, userPrompt, url, brand, additionalInstructions, formula, waterfall, checklist);
 
   if (videoMeta) {
     promptText += `\n\n${formatVideoMeta(videoMeta)}`;

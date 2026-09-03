@@ -39,6 +39,8 @@ const PUBLISH_TIME_MAP = {
   '7d': 'one_week',
   '14d': 'half_year',
   '28d': 'half_year',
+  '90d': 'half_year',
+  all: 'unlimited',
 };
 
 // ---------------------------------------------------------------------------
@@ -322,6 +324,7 @@ export const normalizeContent = (raw) => {
 
     metrics: {
       // playCount is deliberately ignored: Douyin reports 0 for every search row.
+      views: null,
       likes: num(pick(raw, ['statistics.diggCount', 'statistics.digg_count', 'diggCount'])) ?? 0,
       comments: num(pick(raw, ['statistics.commentCount', 'statistics.comment_count', 'commentCount'])) ?? 0,
       shares: num(pick(raw, ['statistics.shareCount', 'statistics.share_count', 'shareCount'])) ?? 0,
@@ -391,6 +394,9 @@ export const douyinApifyProvider = {
   platform: 'douyin',
   source: 'apify',
   label: 'Douyin (Apify)',
+  // Billed per delivered row, so the limit has to be enforced in the request
+  // itself. Asking for more and trimming locally would simply cost more.
+  billing: 'per-row',
   capabilities: { searchByKeyword: true, searchCreators: true, getCreatorVideos: true },
 
   /** Accepts a pasted profile URL or a bare secUid; anything else needs a search. */
@@ -421,7 +427,8 @@ export const douyinApifyProvider = {
       shouldDownloadSlideshowImages: false,
     }, apiKey);
 
-    return normalizeContentList(rows);
+    // Billed per row, so the request already carried the limit: one page only.
+    return { rows: normalizeContentList(rows), cursor: 0, searchId: '', hasMore: false };
   },
 
   async searchCreators({ query, apiKey }) {

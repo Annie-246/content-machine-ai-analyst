@@ -22,8 +22,8 @@ export const WorkflowStepper: React.FC<{
           <div className="text-center w-36 shrink-0">
             <span
               className={`mx-auto mb-2 w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors
-                ${done ? 'bg-[#dc2626] text-white'
-                  : active ? 'bg-[#dc2626] text-white'
+                ${done ? 'bg-[#A4145E] text-white'
+                  : active ? 'bg-[#A4145E] text-white'
                   : 'bg-slate-100 text-slate-400 border border-slate-200'}
                 ${isRunning ? 'ring-4 ring-[#fbdce7] animate-pulse' : ''}`}
             >
@@ -33,7 +33,7 @@ export const WorkflowStepper: React.FC<{
             <p className="text-xs text-slate-500 mt-0.5 leading-snug">{hint}</p>
           </div>
           {i < steps.length - 1 && (
-            <span className={`flex-1 h-px mt-4 min-w-8 ${n < current ? 'bg-[#dc2626]' : 'bg-slate-200'}`} />
+            <span className={`flex-1 h-px mt-4 min-w-8 ${n < current ? 'bg-[#A4145E]' : 'bg-slate-200'}`} />
           )}
         </React.Fragment>
       );
@@ -56,7 +56,7 @@ export const SectionCard: React.FC<{
   <section className={`rounded-2xl border ${muted ? 'border-slate-200 bg-white' : 'border-slate-200 bg-white'} overflow-hidden`}>
     <div className="px-6 py-4 flex items-center justify-between gap-4 border-b border-slate-100">
       <div className="flex items-center gap-3 min-w-0">
-        <span className="w-7 h-7 rounded-full bg-[#fef2f2] text-[#dc2626] flex items-center justify-center text-sm font-bold shrink-0">
+        <span className="w-7 h-7 rounded-full bg-[#FDF2F7] text-[#A4145E] flex items-center justify-center text-sm font-bold shrink-0">
           {n}
         </span>
         <h2 className="text-[17px] font-bold text-slate-900 truncate">{title}</h2>
@@ -96,7 +96,7 @@ export const RunStatus: React.FC<{
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2.5 text-xs text-[#dc2626] font-medium">
+      <div className="flex items-center gap-2.5 text-xs text-[#A4145E] font-medium">
         <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
         <span className="truncate">{message}</span>
         <span className="ml-auto tabular-nums text-slate-500 shrink-0">{formatElapsed(elapsed)}</span>
@@ -105,18 +105,18 @@ export const RunStatus: React.FC<{
   }
 
   return (
-    <div className="rounded-2xl border border-[#f0c9d8] bg-[#fef2f2] p-5">
+    <div className="rounded-2xl border border-[#f0c9d8] bg-[#FDF2F7] p-5">
       <div className="flex items-start gap-3.5">
-        <Loader2 className="w-5 h-5 text-[#dc2626] animate-spin shrink-0 mt-0.5" />
+        <Loader2 className="w-5 h-5 text-[#A4145E] animate-spin shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-sm font-semibold text-slate-900">Đang chạy</p>
-            <span className="text-sm tabular-nums text-[#dc2626] font-semibold">{formatElapsed(elapsed)}</span>
+            <span className="text-sm tabular-nums text-[#A4145E] font-semibold">{formatElapsed(elapsed)}</span>
           </div>
           <p className="text-[13px] text-slate-700 mt-1 leading-relaxed break-words">{message}</p>
 
           <div className="mt-3 h-1.5 rounded-full bg-white overflow-hidden">
-            <div className="h-full w-1/3 rounded-full bg-[#dc2626] cm-progress" />
+            <div className="h-full w-1/3 rounded-full bg-[#A4145E] cm-progress" />
           </div>
 
           <p className="text-[11px] text-slate-500 mt-2">

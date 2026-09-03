@@ -28,20 +28,23 @@ export const TopBar = ({
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+    <header className="sticky top-0 z-30 bg-[#A4145E] border-b border-[#86104D]">
       <div className="flex items-center justify-between gap-4 px-10 py-4">
         <div className="relative" ref={wrapRef}>
           <button
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex items-center gap-3 pl-4 pr-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors min-w-[340px]"
+            className="inline-flex items-center gap-3 pl-4 pr-4 py-2.5 rounded-xl bg-transparent border border-white/60 hover:bg-white/10 transition-colors min-w-[340px] group"
           >
-            <span className="w-6 h-6 rounded-full bg-[#fef2f2] flex items-center justify-center shrink-0">
-              <Aperture className="w-4 h-4 text-[#dc2626]" />
+            <Aperture className="w-[18px] h-[18px] text-white shrink-0" />
+            <span className="flex-1 text-left min-w-0">
+              <span className="block text-[11px] uppercase tracking-wide text-white/70 font-semibold leading-tight">
+                Thương hiệu · bấm để đổi
+              </span>
+              <span className="block text-[15px] font-bold text-white truncate leading-tight">
+                {activeBrand.name}
+              </span>
             </span>
-            <span className="flex-1 text-left text-[15px] font-medium text-slate-900 truncate">
-              {activeBrand.name}
-            </span>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${open ? 'rotate-180' : ''}`} />
           </button>
 
           {open && (
@@ -61,7 +64,7 @@ export const TopBar = ({
                       <span className="block text-xs text-slate-500 truncate">{brand.industry}</span>
                     )}
                   </span>
-                  {brand.id === activeBrand.id && <Check className="w-4 h-4 text-[#dc2626] shrink-0" />}
+                  {brand.id === activeBrand.id && <Check className="w-4 h-4 text-[#A4145E] shrink-0" />}
                 </button>
               ))}
               <button
@@ -71,8 +74,8 @@ export const TopBar = ({
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-left border-t border-slate-100 hover:bg-slate-50 transition-colors"
               >
-                <Plus className="w-4 h-4 text-[#dc2626] shrink-0" />
-                <span className="text-sm font-medium text-[#dc2626]">Thêm thương hiệu mới</span>
+                <Plus className="w-4 h-4 text-[#A4145E] shrink-0" />
+                <span className="text-sm font-medium text-[#A4145E]">Thêm thương hiệu mới</span>
               </button>
             </div>
           )}
@@ -80,7 +83,7 @@ export const TopBar = ({
 
         <button
           onClick={onManageBrand}
-          className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl border border-[#dc2626] text-[#dc2626] font-medium hover:bg-[#fef2f2] transition-colors"
+          className="inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-transparent border border-white/60 text-white font-semibold hover:bg-white/10 transition-colors"
         >
           <ShieldCheck className="w-[18px] h-[18px]" />
           Quản lý Brand

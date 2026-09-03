@@ -37,9 +37,9 @@ export const FeatureRail: React.FC<{
                 key={id}
                 onClick={() => setTab(id)}
                 className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors
-                  ${active ? 'bg-white border border-[#dc2626] text-[#dc2626] shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                  ${active ? 'bg-white border border-[#A4145E] text-[#A4145E] shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
-                <Icon className={`w-4 h-4 ${active ? 'text-[#dc2626]' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${active ? 'text-[#A4145E]' : 'text-slate-400'}`} />
                 {label}
               </button>
             );
@@ -52,12 +52,12 @@ export const FeatureRail: React.FC<{
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm tính năng..."
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#dc2626] transition-colors"
+            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#A4145E] transition-colors"
           />
         </div>
 
         <div>
-          <p className="text-[13px] font-semibold text-slate-500 mb-3">Thư viện tính năng</p>
+          <p className="text-[13px] font-semibold text-slate-500 mb-3">Content Creator</p>
           <div className="space-y-2.5">
             {filtered.map((feature) => {
               const Icon = feature.icon;
@@ -68,14 +68,14 @@ export const FeatureRail: React.FC<{
                   onClick={() => onSelect(feature.mode)}
                   className={`group w-full text-left rounded-2xl border p-4 transition-all flex gap-3.5
                     ${active
-                      ? 'border-[#dc2626] bg-[#fef7f8] shadow-sm'
+                      ? 'border-[#A4145E] bg-[#fef7f8] shadow-sm'
                       : 'border-slate-200 bg-white hover:border-[#f0c9d8] hover:shadow-sm'}`}
                 >
                   <span
                     className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center
-                      ${active ? 'bg-white border border-[#f8d3e0]' : 'bg-[#fef2f2]'}`}
+                      ${active ? 'bg-white border border-[#f8d3e0]' : 'bg-[#FDF2F7]'}`}
                   >
-                    <Icon className="w-[22px] h-[22px] text-[#dc2626]" strokeWidth={1.75} />
+                    <Icon className="w-[22px] h-[22px] text-[#A4145E]" strokeWidth={1.75} />
                   </span>
 
                   <span className="flex-1 min-w-0">
@@ -92,9 +92,9 @@ export const FeatureRail: React.FC<{
 
                   <span className="shrink-0 self-center">
                     {active ? (
-                      <CheckCircle2 className="w-6 h-6 text-[#dc2626]" />
+                      <CheckCircle2 className="w-6 h-6 text-[#A4145E]" />
                     ) : (
-                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#dc2626] transition-colors" />
+                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#A4145E] transition-colors" />
                     )}
                   </span>
                 </button>

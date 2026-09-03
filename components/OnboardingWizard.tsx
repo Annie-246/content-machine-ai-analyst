@@ -57,7 +57,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
           </p>
         </div>
 
-        <div className="bg-white border border-red-200 rounded-2xl shadow-sm p-6 space-y-5">
+        <div className="bg-white border border-pink-200 rounded-2xl shadow-sm p-6 space-y-5">
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
               Tên thương hiệu / kênh của bạn
@@ -71,13 +71,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   if (e.key === 'Enter' && brandName.trim()) onCreateBlank(brandName.trim());
                 }}
                 placeholder="VD: Cửa hàng ABC, Kênh review XYZ..."
-                className="flex-1 bg-red-50/40 border border-red-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-red-500 focus:bg-white transition-colors"
+                className="flex-1 bg-pink-50/40 border border-pink-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-pink-500 focus:bg-white transition-colors"
               />
               <button
                 type="button"
                 disabled={!brandName.trim()}
                 onClick={() => onCreateBlank(brandName.trim())}
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-pink-600 hover:bg-pink-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
               >
                 <PlusCircle className="w-4 h-4" /> Tạo mới từ đầu
               </button>
@@ -105,9 +105,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-white hover:border-red-400 hover:bg-red-50 text-left transition-colors"
+              className="flex items-center gap-3 p-4 rounded-xl border border-pink-200 bg-white hover:border-pink-400 hover:bg-pink-50 text-left transition-colors"
             >
-              <Upload className="w-5 h-5 text-red-600 shrink-0" />
+              <Upload className="w-5 h-5 text-pink-600 shrink-0" />
               <span>
                 <span className="block text-sm font-semibold text-slate-900">Nhập file JSON</span>
                 <span className="block text-xs text-slate-500">Brand DNA đã export từ máy khác</span>
@@ -117,9 +117,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <button
               type="button"
               onClick={() => setShowSamples(v => !v)}
-              className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-white hover:border-red-400 hover:bg-red-50 text-left transition-colors"
+              className="flex items-center gap-3 p-4 rounded-xl border border-pink-200 bg-white hover:border-pink-400 hover:bg-pink-50 text-left transition-colors"
             >
-              <BookOpen className="w-5 h-5 text-red-600 shrink-0" />
+              <BookOpen className="w-5 h-5 text-pink-600 shrink-0" />
               <span>
                 <span className="block text-sm font-semibold text-slate-900">Dùng preset mẫu</span>
                 <span className="block text-xs text-slate-500">Bắt đầu nhanh rồi sửa lại</span>
@@ -134,13 +134,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   key={sample.id}
                   type="button"
                   onClick={() => onUseSample({ ...sample, id: createBrandId() })}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-red-400 hover:bg-red-50 text-left transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-white hover:border-pink-400 hover:bg-pink-50 text-left transition-colors"
                 >
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-slate-900 truncate">{sample.name}</span>
                     <span className="block text-xs text-slate-500 truncate">{sample.industry}</span>
                   </span>
-                  <ArrowRight className="w-4 h-4 text-red-600 shrink-0" />
+                  <ArrowRight className="w-4 h-4 text-pink-600 shrink-0" />
                 </button>
               ))}
             </div>

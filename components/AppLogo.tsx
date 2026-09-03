@@ -1,5 +1,6 @@
 import React from 'react';
 import { APP_CONFIG } from '../data/appConfig';
+import { COMMUNITY } from '../data/communityConfig';
 
 interface AppLogoProps {
   className?: string;
@@ -7,21 +8,20 @@ interface AppLogoProps {
 }
 
 /**
- * Logo của ứng dụng (không gắn với thương hiệu khách hàng nào).
- * Vẽ bằng SVG nội tuyến nên không cần file ảnh trong public/.
+ * Logo của ứng dụng - dùng chính logo XMAI của cộng đồng.
+ *
+ * Ảnh nằm trong public/ nên app offline vẫn hiện. Trước đây đây là một hình tam
+ * giác play vẽ tay: nó trông như logo mặc định của một app bất kỳ, còn cái này
+ * nói ngay app đến từ đâu.
  */
 export const AppLogo: React.FC<AppLogoProps> = ({ className = '', variant = 'full' }) => {
   return (
     <div className={`flex items-center gap-3 select-none ${className}`}>
-      <span className="shrink-0 w-10 h-10 rounded-xl bg-[#dc2626] flex items-center justify-center shadow-sm">
-        <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden="true">
-          <path
-            d="M9 7.5v9l7-4.5-7-4.5Z"
-            fill="#ffffff"
-          />
-          <circle cx="12" cy="12" r="9.25" fill="none" stroke="#ffffff" strokeOpacity="0.45" strokeWidth="1.5" />
-        </svg>
-      </span>
+      <img
+        src={COMMUNITY.skool.logo}
+        alt={APP_CONFIG.name}
+        className="shrink-0 w-10 h-10 rounded-xl object-cover shadow-sm ring-1 ring-slate-900/10"
+      />
 
       {variant !== 'compact' && (
         <span className="min-w-0">

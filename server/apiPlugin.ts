@@ -25,7 +25,7 @@ export const apiPlugin = (fallbackApiKey: string): Plugin => ({
     server.middlewares.use('/api/radar/search', guard((req: any, res: any) => handleRadarSearch(req, res, fallbackApiKey)));
     server.middlewares.use('/api/radar/suggest-keywords', guard((req: any, res: any) => handleRadarSuggest(req, res, fallbackApiKey)));
     server.middlewares.use('/api/radar/creators', guard(handleRadarCreators));
-    server.middlewares.use('/api/radar/creator-videos', guard(handleRadarCreatorVideos));
+    server.middlewares.use('/api/radar/creator-videos', guard((req: any, res: any) => handleRadarCreatorVideos(req, res, fallbackApiKey)));
     server.middlewares.use('/api/health', (req: any, res: any) => {
       if (req.method === 'OPTIONS') return handlePreflight(req, res);
       applyCors(req, res);

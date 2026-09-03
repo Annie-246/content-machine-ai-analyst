@@ -32,7 +32,7 @@ export const RadarCreatorCard: React.FC<{ creator: RadarCreatorSummary }> = ({ c
       </div>
 
       <span
-        className="shrink-0 px-2.5 py-1 rounded-lg border border-[#f8d3e0] bg-[#fef2f2] text-[#dc2626] text-[13px] font-bold tabular-nums"
+        className="shrink-0 px-2.5 py-1 rounded-lg border border-[#f8d3e0] bg-[#FDF2F7] text-[#A4145E] text-[13px] font-bold tabular-nums"
         title="Radar Score cao nhất trong kết quả này"
       >
         {Math.round(creator.bestRadarScore)}
@@ -75,7 +75,7 @@ export const RadarCreatorCard: React.FC<{ creator: RadarCreatorSummary }> = ({ c
           href={creator.bestContent.videoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#dc2626] hover:underline"
+          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#A4145E] hover:underline"
         >
           Xem video gốc <ExternalLink className="w-3.5 h-3.5" />
         </a>
@@ -87,7 +87,7 @@ export const RadarCreatorCard: React.FC<{ creator: RadarCreatorSummary }> = ({ c
         href={creator.profileUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-[#dc2626] transition-colors"
+        className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-[#A4145E] transition-colors"
       >
         Trang cá nhân <ExternalLink className="w-3 h-3" />
       </a>

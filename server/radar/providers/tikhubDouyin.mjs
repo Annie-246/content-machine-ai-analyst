@@ -5,11 +5,18 @@
 // bills per request ($0.01 for a whole page of results) and runs the endpoints
 // itself, so a 20-result scan costs ~$0.01 instead of ~$0.10.
 //
-// NOT YET VERIFIED AGAINST A LIVE RESPONSE. Every call so far stopped at 402
-// (no balance) or 403 (token scope), so the field mapping below is written
-// against Douyin's own aweme schema - which TikHub passes through - rather than
-// against a captured payload. The array-finding walk is deliberately generic so
-// a wrapper key we guessed wrong does not break extraction.
+// Verified against a live video-search response. The payload confirmed the field
+// names below, and corrected one guess: search rows arrive as
+// data.business_data[] where each row wraps the video at .data.aweme_info, one
+// level deeper than the shape the rest of Douyin's API uses. Rows with no
+// aweme_info (type 66668 carries related search words) are skipped.
+//
+// Two fields the schema documents are absent from search responses and are left
+// as null: author.mplatform_followers_count and is_ads. statistics.play_count is
+// present but always 0, so it stays ignored.
+//
+// Creator search needed the same treatment for a different shape - see
+// userFromDynamicPatch below.
 
 const TIKHUB_BASE = 'https://api.tikhub.io';
 const REQUEST_TIMEOUT_MS = 60_000;
@@ -19,8 +26,10 @@ const ENDPOINTS = {
   videoSearch: '/api/v1/douyin/search/fetch_video_search_v2',
   // $0.01/request, does not accept free credit.
   userSearch: '/api/v1/douyin/search/fetch_user_search',
-  // $0.001/request, DOES accept free credit.
-  userPosts: '/api/v1/douyin/web/fetch_user_post_videos',
+  // The /web/ variant of this endpoint answers 403 "API Token lacks required
+  // permissions" on a standard token; the /app/v3/ one is in scope and returns
+  // the same aweme_list. Verified live against both.
+  userPosts: '/api/v1/douyin/app/v3/fetch_user_post_videos',
 };
 
 // Our sort ids -> Douyin's sort_type. 0 general, 1 most liked, 2 newest.
@@ -28,11 +37,14 @@ const SORT_MAP = { recommended: '0', engagement: '1', latest: '2' };
 
 // Our windows -> Douyin's publish_time. Only 1/7/180 days exist, so map to a
 // window at least as wide as ours and make the exact cut locally.
-const PUBLISH_TIME_MAP = { '24h': '1', '72h': '7', '7d': '7', '14d': '180', '28d': '180' };
+const PUBLISH_TIME_MAP = {
+  '24h': '1', '72h': '7', '7d': '7', '14d': '180', '28d': '180', '90d': '180', all: '0',
+};
 
-// Douyin pages this endpoint around 10-20 items; ask for enough to cover the
-// user's limit in ONE request, since the request is what is billed.
-const SEARCH_PAGE_SIZE = 20;
+// Measured, not assumed: this endpoint returns about 7 rows per request and
+// takes no page-size parameter. A limit above that needs a second page, which is
+// a second $0.01 charge - so the service decides how many pages to ask for, caps
+// them, and shows the count before the user clicks.
 
 // ---------------------------------------------------------------------------
 // helpers (same shapes as the Apify provider, kept local so the two files stay
@@ -196,12 +208,44 @@ const findArray = (root, looksRight, maxDepth = 8) => {
   return best || [];
 };
 
-const isVideoRow = (x) => 'aweme_id' in x || 'aweme_info' in x || ('desc' in x && 'statistics' in x);
-const isUserRow = (x) => 'sec_uid' in x || 'user_info' in x || ('nickname' in x && 'uid' in x);
+/**
+ * Creator rows carry no inline user object. Douyin returns them as a render
+ * payload: data.user_list[] where every field is null except dynamic_patch,
+ * whose raw_data is a JSON *string* holding user_info. Confirmed against a live
+ * response; the inline shapes below still cover the other endpoints.
+ */
+const userFromDynamicPatch = (row) => {
+  const raw = row && row.dynamic_patch && row.dynamic_patch.raw_data;
+  if (typeof raw !== 'string' || !raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed.user_info || null : null;
+  } catch {
+    return null;
+  }
+};
 
-/** Search rows arrive wrapped as { type, aweme_info: {...} }. */
-const unwrapVideo = (row) => (row && typeof row === 'object' ? row.aweme_info || row.aweme_detail || row : null);
-const unwrapUser = (row) => (row && typeof row === 'object' ? row.user_info || row.user || row : null);
+const isVideoRow = (x) =>
+  'aweme_id' in x ||
+  'aweme_info' in x ||
+  // Search results nest the video one level deeper than every other endpoint.
+  (x.data && typeof x.data === 'object' && 'aweme_info' in x.data) ||
+  ('desc' in x && 'statistics' in x);
+const isUserRow = (x) =>
+  'sec_uid' in x || 'user_info' in x || ('nickname' in x && 'uid' in x) || !!userFromDynamicPatch(x);
+
+/**
+ * Search rows arrive as { data_id, type, data: { aweme_info }, card_id }; the
+ * user-posts endpoint returns the aweme object directly.
+ */
+const unwrapVideo = (row) => {
+  if (!row || typeof row !== 'object') return null;
+  return row.aweme_info || row.aweme_detail || row.data?.aweme_info || row.data?.aweme_detail || row;
+};
+const unwrapUser = (row) => {
+  if (!row || typeof row !== 'object') return null;
+  return row.user_info || row.user || userFromDynamicPatch(row) || row;
+};
 
 // ---------------------------------------------------------------------------
 // normalization
@@ -257,7 +301,9 @@ export const normalizeContent = (row) => {
     },
 
     metrics: {
-      // play_count is ignored on purpose: Douyin reports 0 for search results.
+      // Douyin reports play_count = 0 on every search row, so it is reported as
+      // unknown rather than as a real zero.
+      views: null,
       likes: num(get(v, 'statistics.digg_count')) ?? 0,
       comments: num(get(v, 'statistics.comment_count')) ?? 0,
       shares: num(get(v, 'statistics.share_count')) ?? 0,
@@ -332,6 +378,13 @@ export const tikhubDouyinProvider = {
   platform: 'douyin',
   source: 'tikhub',
   label: 'Douyin (TikHub)',
+  // Billed per request, not per row: one call returns a whole page whatever
+  // the user's limit is. So the page comes back untrimmed and the service
+  // picks the best `limit` rows AFTER filtering - throwing rows away here
+  // would discard data already paid for.
+  billing: 'per-request',
+  // Measured: this endpoint returns 7 rows and takes no page-size parameter.
+  pageSize: 7,
   capabilities: { searchByKeyword: true, searchCreators: true, getCreatorVideos: true },
 
   parseCreatorRef(input) {
@@ -339,26 +392,41 @@ export const tikhubDouyinProvider = {
     return secUid ? `https://www.douyin.com/user/${secUid}` : null;
   },
 
-  async searchByKeyword({ query, limit, sort, windowId, apiKey }) {
-    // One billed request. `limit` caps what we keep, never how many requests we
-    // make - there is no pagination loop here by design.
+  /**
+   * One billed page. The caller decides whether to ask for another, passing the
+   * cursor and search_id it got back - Douyin keys a search session on those,
+   * and page two without them just repeats page one.
+   */
+  async searchByKeyword({ query, sort, windowId, apiKey, cursor = 0, searchId = '' }) {
     const json = await request(ENDPOINTS.videoSearch, {
       method: 'POST',
       apiKey,
       body: {
         keyword: query,
-        cursor: 0,
+        cursor,
         sort_type: SORT_MAP[sort] || '0',
         publish_time: PUBLISH_TIME_MAP[windowId] || '0',
         filter_duration: '0',
         content_type: '1',
-        search_id: '',
+        search_id: searchId,
         backtrace: '',
       },
     });
 
-    const rows = findArray(json, isVideoRow);
-    return normalizeContentList(rows).slice(0, Math.max(limit, 0) || SEARCH_PAGE_SIZE);
+    const rows = normalizeContentList(findArray(json, isVideoRow));
+    const data = json?.data || {};
+
+    return {
+      // Deliberately NOT trimmed to `limit` - see `billing` above.
+      rows,
+      // The envelope carries no cursor of its own, so advance by what we read.
+      cursor: cursor + rows.length,
+      // There is no data.search_id despite the request field being called that:
+      // the session id comes back as log_pb.impr_id (extra.logid on some
+      // responses). Sending page two without it is rejected outright.
+      searchId: str(get(data, 'log_pb.impr_id')) || str(get(data, 'extra.logid')) || searchId,
+      hasMore: rows.length > 0,
+    };
   },
 
   async searchCreators({ query, apiKey }) {
@@ -381,7 +449,7 @@ export const tikhubDouyinProvider = {
     return out;
   },
 
-  async getCreatorVideos({ ref, limit, apiKey }) {
+  async getCreatorVideos({ ref, limit, apiKey, cursor = 0 }) {
     const secUid = secUidFromRef(ref);
     if (!secUid) {
       throw new RadarProviderError(
@@ -390,13 +458,20 @@ export const tikhubDouyinProvider = {
       );
     }
 
+    // This endpoint spells the page size "counts"; "count" is accepted but
+    // ignored, and omitting sec_user_id's companions answers 400.
     const json = await request(ENDPOINTS.userPosts, {
       apiKey,
-      query: { sec_user_id: secUid, max_cursor: 0, count: Math.min(Math.max(limit, 1), 20), filter_type: 0 },
+      query: { sec_user_id: secUid, max_cursor: cursor, counts: Math.min(Math.max(limit, 1), 20) },
     });
 
-    const rows = findArray(json, isVideoRow);
-    return normalizeContentList(rows).slice(0, Math.max(limit, 0) || 20);
+    // Page size is asked for above; trimming to `limit` is left to the service,
+    // which does it after the time filter so the rows kept are the best ones.
+    const rows = normalizeContentList(findArray(json, isVideoRow));
+    const data = json?.data || {};
+    const nextCursor = num(pick(data, ['max_cursor', 'cursor']));
+
+    return { rows, cursor: nextCursor ?? 0, hasMore: Boolean(data.has_more) && rows.length > 0 };
   },
 };
 

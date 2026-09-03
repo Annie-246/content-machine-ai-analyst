@@ -8,8 +8,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import dns from 'node:dns/promises';
 import net from 'node:net';
+import { createHash } from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import { douyinCookieArgs, hasBrowser } from './douyinCookies.mjs';
+import { renderPage, canRender, hasCookieJar } from './browserPage.mjs';
 import * as radar from './radar/radarService.mjs';
 
 const execFileAsync = promisify(execFile);
@@ -687,6 +689,9 @@ const SOURCE_UA =
 const MIN_USEFUL_CHARS = 60;
 // How many distinct copy blocks to lift out of one app-shell page.
 const MAX_EMBEDDED_BLOCKS = 150;
+// Logged out, Facebook embeds about seven; a signed-in read returns far more, so
+// the ceiling is here to bound the prompt rather than to match what FB gives.
+const MAX_FB_COMMENTS = 300;
 
 // Facebook, Instagram, Threads and most app-shell sites hand a plain reader an
 // empty frame, but serve the full copy to the crawlers that build search results
@@ -798,6 +803,24 @@ const readMeta = (html, names) => {
   return '';
 };
 
+// A gallery post declares one og:image per picture, so the first match alone
+// throws away everything after the cover.
+const readMetaAll = (html, names) => {
+  const values = [];
+  for (const name of names) {
+    const re = new RegExp(
+      `<meta[^>]+(?:name|property)=["']${name}["'][^>]*content=["']([^"']*)["']|` +
+      `<meta[^>]+content=["']([^"']*)["'][^>]*(?:name|property)=["']${name}["']`,
+      'gi',
+    );
+    for (const m of html.matchAll(re)) {
+      const value = (m[1] ?? m[2] ?? '').trim();
+      if (value) values.push(decodeEntities(value));
+    }
+  }
+  return values;
+};
+
 const htmlToText = (html) =>
   html
     .replace(/<!--[\s\S]*?-->/g, ' ')
@@ -874,8 +897,8 @@ const dropChrome = (text) =>
 
 // An app-shell page keeps its real copy in the JSON it ships to the browser, so
 // the visible-text pass finds nothing. These are the post captions, the intro
-// blurb and the about section - exactly the brand's own wording.
-const extractEmbeddedText = (html) => {
+// blurb and the about section - and, on a post page, the reader comments.
+const extractEmbeddedBlocks = (html) => {
   const seen = new Set();
   const lines = [];
 
@@ -895,8 +918,10 @@ const extractEmbeddedText = (html) => {
     if (lines.length >= MAX_EMBEDDED_BLOCKS) break;
   }
 
-  return lines.join('\n\n');
+  return lines;
 };
+
+const extractEmbeddedText = (html) => extractEmbeddedBlocks(html).join('\n\n');
 
 const fetchPage = async (url, userAgent) => {
   const controller = new AbortController();
@@ -972,7 +997,7 @@ const interpretPage = (url, raw, response, buffer) => {
     url: raw,
     kind: 'web',
     title: title || raw,
-    imageUrls: isHtml ? collectImageUrls(html) : [],
+    imageUrls: isHtml ? collectImageUrls(html, response.url || raw) : [],
     text: [
       `NGUỒN: ${raw}`,
       title ? `TIÊU ĐỀ TRANG: ${title}` : '',
@@ -1036,11 +1061,14 @@ const readPage = async (url, raw) => {
 
 // ----- Post photos ---------------------------------------------------------
 // Creators regularly put the real message on the image rather than in the
-// caption, so a social post is only half read without its pictures. This runs
-// for social links only - a blog article is already all text.
+// caption, so a post is only half read without its pictures. Articles are the
+// same story: the infographic, the chart and the screenshot inside them carry
+// text that never appears in the prose.
 
-const MAX_POST_IMAGES = 4;
-const MAX_IMAGE_ATTEMPTS = 12;
+const MAX_POST_IMAGES = 8;
+const MAX_IMAGE_ATTEMPTS = 24;
+// Downloading one at a time made a picture-heavy article crawl.
+const IMAGE_FETCH_CONCURRENCY = 4;
 // Anything smaller is an avatar, an icon or a tracking pixel.
 const POST_IMAGE_MIN_BYTES = 12_000;
 const POST_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
@@ -1048,27 +1076,97 @@ const POST_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 const STATIC_ASSET_RE =
   /\/rsrc\.php\/|static\.(?:xx\.fbcdn\.net|cdninstagram\.com|licdn\.com)|\/emoji|sprite|favicon|\/static\//i;
 
+// Site furniture, not content: every article page carries these and none of
+// them says anything about the story.
+const CHROME_IMAGE_RE =
+  /\b(?:logo|icon|avatar|placeholder|banner|advert|ads?|pixel|tracking|blank|loading|spinner|button|badge|watermark|qr[-_]?code|share|social)\b/i;
+
+const IMAGE_EXT_RE = /\.(?:jpe?g|png|webp)(?:$|[?#])/i;
+
 const IMAGE_URL_RE =
   /"(?:image|image_url|display_url|thumbnail_src|src|uri|url)"\s*:\s*"(https:(?:\\?\/){2}[^"]{30,500}?\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi;
 
-const collectImageUrls = (html) => {
+// <img> and <source> hold the article's own photos, and lazy-loading sites keep
+// the real address in a data- attribute with src pointing at a grey placeholder.
+const IMG_TAG_RE = /<(?:img|source)\b[^>]*>/gi;
+const ATTR_RE =
+  /\b(?:src|data-src|data-original|data-lazy-src|data-lazy|data-echo|data-url|data-image|content)\s*=\s*["']([^"']+)["']/i;
+const SRCSET_ATTR_RE = /\b(?:srcset|data-srcset)\s*=\s*["']([^"']+)["']/i;
+const PRELOAD_IMAGE_RE =
+  /<link\b[^>]*\brel=["']preload["'][^>]*\bas=["']image["'][^>]*>/gi;
+const HREF_RE = /\bhref\s*=\s*["']([^"']+)["']/i;
+
+// A srcset lists the same picture at several widths; the widest is the one
+// worth reading text off.
+const widestFromSrcset = (value) => {
+  let best = '';
+  let bestWidth = -1;
+  for (const candidate of value.split(',')) {
+    const [href, descriptor = ''] = candidate.trim().split(/\s+/);
+    if (!href) continue;
+    const width = Number((descriptor.match(/^(\d+)w$/) || [])[1] || 0);
+    if (width > bestWidth) { bestWidth = width; best = href; }
+  }
+  return best;
+};
+
+// The same photo shows up as a thumbnail, a resized variant and the original,
+// so the file name minus its size prefix is what tells two pictures apart.
+const imageIdentity = (url) => {
+  try {
+    const { hostname, pathname } = new URL(url);
+    const file = pathname.split('/').filter(Boolean).pop() || pathname;
+    return `${hostname}/${file.replace(/^\d{2,4}px-/i, '').toLowerCase()}`;
+  } catch {
+    return url;
+  }
+};
+
+const collectImageUrls = (html, pageUrl = '') => {
   const urls = [];
   const seen = new Set();
-  const add = (raw) => {
+  // A declared preview image is the page's own cover, so it is taken at its
+  // word even when the address carries no file extension.
+  const add = (raw, declared = false) => {
     if (!raw) return;
-    const url = raw.replace(/\\\//g, '/').replace(/&amp;/gi, '&');
-    if (seen.has(url) || !/^https?:\/\//i.test(url)) return;
+    const cleaned = raw.replace(/\\\//g, '/').replace(/&amp;/gi, '&').trim();
+    if (!cleaned || cleaned.startsWith('data:')) return;
+
+    // Articles routinely use "/photo/x.jpg" or "//cdn/x.jpg" rather than a full
+    // address, and those are exactly the in-body photos we were missing.
+    let url;
+    try {
+      url = pageUrl ? new URL(cleaned, pageUrl).href : cleaned;
+    } catch {
+      return;
+    }
+    if (!/^https?:\/\//i.test(url)) return;
+    if (!declared && !IMAGE_EXT_RE.test(url)) return;
     if (STATIC_ASSET_RE.test(url)) return;
-    seen.add(url);
+    if (!declared && CHROME_IMAGE_RE.test(url)) return;
+
+    const key = imageIdentity(url);
+    if (seen.has(key)) return;
+    seen.add(key);
     urls.push(url);
   };
 
-  // The preview image is the post's main photo on every one of these platforms.
-  add(readMeta(html, ['og:image', 'twitter:image']));
+  // The preview image is the post's main photo on every one of these platforms,
+  // and a gallery article declares one og:image per picture.
+  for (const value of readMetaAll(html, ['og:image', 'og:image:url', 'twitter:image'])) add(value, true);
+
+  for (const tag of html.match(IMG_TAG_RE) || []) {
+    const srcset = tag.match(SRCSET_ATTR_RE)?.[1];
+    if (srcset) add(widestFromSrcset(srcset));
+    add(tag.match(ATTR_RE)?.[1]);
+    if (urls.length >= 40) return urls;
+  }
+
+  for (const tag of html.match(PRELOAD_IMAGE_RE) || []) add(tag.match(HREF_RE)?.[1]);
 
   for (const m of html.matchAll(IMAGE_URL_RE)) {
     add(m[1]);
-    if (urls.length >= 30) break;
+    if (urls.length >= 40) break;
   }
   return urls;
 };
@@ -1083,7 +1181,7 @@ const fetchImageAs = async (url, userAgent, referer) => {
     const res = await fetch(url, { headers, redirect: 'follow', signal: controller.signal });
     if (!res.ok) return null;
     const type = (res.headers.get('content-type') || '').toLowerCase().split(';')[0];
-    if (!type.startsWith('image/')) return null;
+    if (!type.startsWith('image/') || type === 'image/svg+xml') return null;
 
     const buffer = await readCapped(res, POST_IMAGE_MAX_BYTES);
     if (buffer.length < POST_IMAGE_MIN_BYTES) return null;
@@ -1095,31 +1193,63 @@ const fetchImageAs = async (url, userAgent, referer) => {
   }
 };
 
-const downloadImage = async (raw, referer) => {
-  let url;
+// Facebook's collage asks its CDN for a thumbnail: "ctp" caps delivery at the
+// size the page happened to display, so a photo full of text arrives at 268px
+// wide and unreadable. The signature covers the rest of the query, which is why
+// dropping that one parameter still returns the full-size photo.
+const fullSizeVariant = (raw) => {
   try {
-    url = await assertPublicHttpUrl(raw);
+    const url = new URL(raw);
+    if (!/(^|\.)fbcdn\.net$/i.test(url.hostname) || !url.searchParams.has('ctp')) return '';
+    url.searchParams.delete('ctp');
+    return url.href;
+  } catch {
+    return '';
+  }
+};
+
+const downloadImage = async (raw, referer) => {
+  try {
+    await assertPublicHttpUrl(raw);
   } catch {
     return null;
   }
 
   // Facebook answers a plain browser with an empty HTML page here and only hands
   // the real photo to a crawler, so try that identity first.
-  for (const userAgent of [CRAWLER_UAS[0], SOURCE_UA]) {
-    const got = await fetchImageAs(url, userAgent, referer);
-    if (got) return { base64: got.buffer.toString('base64'), mimeType: got.type, url: raw };
+  for (const url of [fullSizeVariant(raw), raw].filter(Boolean)) {
+    for (const userAgent of [CRAWLER_UAS[0], SOURCE_UA]) {
+      const got = await fetchImageAs(url, userAgent, referer);
+      if (!got) continue;
+      return {
+        base64: got.buffer.toString('base64'),
+        mimeType: got.type,
+        url,
+        // News sites serve one photo from several CDN shards under different
+        // addresses, so only the bytes prove two pictures are the same.
+        digest: createHash('sha1').update(got.buffer).digest('hex'),
+      };
+    }
   }
   return null;
 };
 
 const downloadPostImages = async (urls, referer) => {
+  const candidates = urls.slice(0, MAX_IMAGE_ATTEMPTS);
   const images = [];
-  let attempts = 0;
-  for (const url of urls) {
-    if (images.length >= MAX_POST_IMAGES || attempts >= MAX_IMAGE_ATTEMPTS) break;
-    attempts++;
-    const image = await downloadImage(url, referer);
-    if (image) images.push(image);
+  const digests = new Set();
+
+  // Page order is meaningful - the cover and the first in-body photos matter
+  // most - so keep it, but fetch a batch at a time instead of one by one.
+  for (let i = 0; i < candidates.length && images.length < MAX_POST_IMAGES; i += IMAGE_FETCH_CONCURRENCY) {
+    const batch = candidates.slice(i, i + IMAGE_FETCH_CONCURRENCY);
+    const got = await Promise.all(batch.map((url) => downloadImage(url, referer)));
+    for (const image of got) {
+      if (!image || images.length >= MAX_POST_IMAGES) continue;
+      if (digests.has(image.digest)) continue;
+      digests.add(image.digest);
+      images.push({ base64: image.base64, mimeType: image.mimeType, url: image.url });
+    }
   }
   return images;
 };
@@ -1387,22 +1517,111 @@ const socialToText = async (url) => {
   };
 };
 
+// These three build their photo collage in the browser and hand a plain reader
+// one og:image, so a post with ten pictures arrives looking like it has one.
+const SCRIPTED_PHOTO_HOST_RE = /(^|\.)(?:facebook\.com|fb\.com|fb\.watch|instagram\.com|threads\.(?:net|com))$/i;
+
+// The rendered page is read for its pictures, and - when a cookie jar lets the
+// browser in - for the comments too. Its prose is still ignored: that is the same
+// post the cheaper readers already returned, wrapped in login prompts and menus.
+const readRendered = async (raw, { withComments = false } = {}) => {
+  const rendered = await renderPage(raw, { withComments }).catch(() => null);
+  if (!rendered) return null;
+  const comments = withComments ? rendered.comments || [] : [];
+  if (!rendered.imageUrls?.length && !comments.length) return null;
+  return { imageUrls: rendered.imageUrls || [], comments, rendered: true };
+};
+
+// Facebook's preview image is its crawler re-encoding the post's first photo, so
+// once the page itself has been rendered it is a duplicate wearing a new name.
+const FB_CRAWLER_MEDIA_RE = /lookaside\.fbsbx\.com\/lookaside\/crawler\/media/i;
+
+// ----- Facebook comments ---------------------------------------------------
+// Comments are where a buyer says the thing the caption never will - the real
+// objection, the price question, the workaround. Measured against a live post:
+// the browser identity is answered with HTTP 400, facebookexternalhit gets a
+// 351KB shell holding no comment at all, and only Googlebot is served the post
+// with its comments embedded in the shipped JSON. So this one identity is the
+// whole story, and `readPage` cannot be relied on to reach it - it stops at the
+// first identity returning 1500 characters, which on many posts is not this one.
+const FB_HOST_RE = /(^|\.)(?:facebook\.com|fb\.com|fb\.watch)$/i;
+const GOOGLEBOT_UA = CRAWLER_UAS[0];
+
+// Facebook ships these in the very same JSON fields as the comments, so without
+// naming them they arrive looking like things a reader said.
+const FB_COMMENT_NOISE_RE = new RegExp(
+  '^(' + [
+    'bình luận đã bị tắt', 'bất kỳ ai cũng có thể nhìn thấy',
+    'chỉ những thành viên trong nhóm', 'bạn hiện không xem được nội dung này',
+    'đăng nhập vào facebook', 'bạn quên tài khoản',
+    'a server error', 'check server logs',
+  ].join('|') + ')',
+  'i',
+);
+
+const sameOpening = (a, b) => {
+  const key = (s) => s.replace(/\s+/g, ' ').trim().slice(0, 60).toLowerCase();
+  return !!a && !!b && key(a) === key(b);
+};
+
+/**
+ * The post's reader comments, in the order Facebook ranks them. Returns an empty
+ * list rather than throwing: a post with comments turned off, a login-walled
+ * group or a plain fetch failure all mean the same thing to the caller.
+ */
+const readFacebookComments = async (url, raw) => {
+  let html;
+  try {
+    const { response, buffer } = await fetchPage(url, GOOGLEBOT_UA);
+    if (!response.ok) return { comments: [] };
+    html = buffer.toString('utf8');
+  } catch {
+    return { comments: [] };
+  }
+
+  // The caption rides in the same JSON fields as the comments; og:description is
+  // how we tell the two apart.
+  const caption = readMeta(html, ['og:description', 'description', 'twitter:description']);
+
+  const comments = extractEmbeddedBlocks(html)
+    .filter((block) => !FB_COMMENT_NOISE_RE.test(block))
+    .filter((block) => !sameOpening(block, caption))
+    .slice(0, MAX_FB_COMMENTS);
+
+  return { comments, caption };
+};
+
 // Every reader that can say something about this link, merged. yt-dlp brings the
 // engagement numbers, the page read brings text posts and the full captions, and
 // X needs its own widget endpoints - no single one covers every post format.
-const readSocial = async (url, raw) => {
+const readSocial = async (url, raw, { withComments = false } = {}) => {
   const host = url.hostname.replace(/^www\./, '').toLowerCase();
   const isX = /(^|\.)(x|twitter)\.com$/.test(host);
   const isDouyin = DOUYIN_HOST_RE.test(host);
+  // Identifying the comments is worth doing either way - with the switch on they
+  // become a labelled section, with it off they are what gets removed. Only the
+  // signed-in browser read is gated, because that one costs a page load.
+  const isFacebook = FB_HOST_RE.test(host);
+  const wantsComments = withComments && isFacebook;
 
   const readers = [
     isX ? readX(url).catch(() => null) : null,
     isDouyin ? readDouyin(raw).catch(() => null) : null,
+    SCRIPTED_PHOTO_HOST_RE.test(host) && canRender()
+      ? readRendered(raw, { withComments: wantsComments && hasCookieJar() })
+      : null,
     socialToText(raw).then((r) => r, (err) => ({ ytdlpError: explainYtdlpError(err) })),
     readPage(url, raw).then((r) => r, (err) => ({ pageError: err.message })),
   ].filter(Boolean);
 
-  const results = await Promise.all(readers);
+  // Runs alongside the readers rather than through them: `readPage` returns the
+  // first identity that yields enough text, which is often not the one Facebook
+  // gives comments to.
+  const commentRead = isFacebook
+    ? readFacebookComments(url, raw).catch(() => ({ comments: [] }))
+    : Promise.resolve({ comments: [] });
+
+  const [results, commentResult] = await Promise.all([Promise.all(readers), commentRead]);
 
   // When one reader returns the post in structured form, the looser readers add
   // noise rather than information.
@@ -1447,7 +1666,49 @@ const readSocial = async (url, raw) => {
     .join('\n')
     .replace(/\n{3,}/g, '\n\n');
 
-  const images = await downloadPostImages([...new Set(imageUrls)], raw);
+  // Those same comments already arrived through the page read - unlabelled, and
+  // sitting flush against the caption, so the model had no way to tell a reader's
+  // objection from the brand's own words. They are therefore always lifted out,
+  // whichever way the switch is set: naming them is what makes them usable, and
+  // removing them is what makes "off" mean off. Leaving them in place unnamed is
+  // the one outcome that helps nobody.
+  // Two ways in, and they do not overlap in strength: signed in, the browser sees
+  // every comment; signed out, Googlebot's copy is all there is. Whichever came
+  // back richer is the one worth sending.
+  const rendered = results.flatMap((r) => (Array.isArray(r?.comments) ? r.comments : []));
+  const crawled = commentResult.comments || [];
+  const comments = rendered.length > crawled.length ? rendered : crawled;
+  let body = merged;
+
+  if (comments.length) {
+    const spoken = new Set(
+      comments.flatMap((c) => c.split('\n').map((l) => l.trim()).filter((l) => l.length >= 15)),
+    );
+    body = merged
+      .split('\n')
+      .filter((line) => {
+        const key = line.trim();
+        // Facebook's own interjections - the group blurb, a stray server error -
+        // read as post copy once the comments around them are gone.
+        return !spoken.has(key) && !FB_COMMENT_NOISE_RE.test(key);
+      })
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    if (withComments) {
+      body += `\n\nBÌNH LUẬN CỦA NGƯỜI ĐỌC (${comments.length}):\n` +
+        comments.map((c, i) => `${i + 1}. ${c.replace(/\s+/g, ' ').trim()}`).join('\n');
+      console.log(`[fetch-source] đọc kèm ${comments.length} bình luận`);
+    } else {
+      console.log(`[fetch-source] bỏ ${comments.length} bình luận theo lựa chọn của người dùng`);
+    }
+  }
+
+  const gotRendered = results.some((r) => r?.rendered && r.imageUrls?.length);
+  const candidates = [...new Set(imageUrls)].filter((u) => !gotRendered || !FB_CRAWLER_MEDIA_RE.test(u));
+
+  const images = await downloadPostImages(candidates, raw);
   if (images.length) console.log(`[fetch-source] tải kèm ${images.length} ảnh trong bài`);
 
   const isProfile = isX && X_PROFILE.test(url.pathname);
@@ -1455,10 +1716,13 @@ const readSocial = async (url, raw) => {
     url: raw,
     kind: 'social',
     title: title || raw,
-    text: merged.slice(0, SOURCE_MAX_CHARS),
+    text: body.slice(0, SOURCE_MAX_CHARS),
     // The pictures that came with the post, so the model can read what the
     // caption leaves out.
     images,
+    // Shown in the UI so a thin read is visible rather than guessed at. Zero when
+    // the switch is off, because none of them were sent.
+    commentCount: withComments ? comments.length : 0,
     // Shown to the user, never sent to the model: X only serves its timeline to
     // logged-in readers, so a profile link yields the bio and little else.
     note: isProfile && !gotPosts && merged.length < 900
@@ -1478,17 +1742,25 @@ export const handleFetchSource = async (req, res) => {
     const url = await assertPublicHttpUrl(raw);
     const host = url.hostname.replace(/^www\./, '').toLowerCase();
     const isSocial = isAllowedUrl(raw) || /(^|\.)(x|twitter)\.com$/.test(host);
+    const withComments = body.withComments === true;
 
     if (isSocial) {
       try {
-        return sendJson(res, 200, await readSocial(url, raw));
+        return sendJson(res, 200, await readSocial(url, raw, { withComments }));
       } catch (err) {
         return sendJson(res, 502, { error: err.message });
       }
     }
 
     try {
-      return sendJson(res, 200, await readPage(url, raw));
+      const page = await readPage(url, raw);
+      if (page.kind !== 'web') return sendJson(res, 200, page);
+
+      // An article's infographics, charts and screenshots carry wording the
+      // prose never repeats, so they travel with the text.
+      const images = await downloadPostImages(page.imageUrls || [], raw);
+      if (images.length) console.log(`[fetch-source] tải kèm ${images.length} ảnh trong bài`);
+      return sendJson(res, 200, { ...page, images });
     } catch (err) {
       return sendJson(res, 502, { error: err.message });
     }
@@ -1533,4 +1805,9 @@ export const handleRadarSuggest = (req, res, fallbackApiKey = '') =>
 
 export const handleRadarCreators = radarRoute((body) => radar.searchCreators(body));
 
-export const handleRadarCreatorVideos = radarRoute((body) => radar.getCreatorVideos(body));
+// Carries the Gemini key for the same reason the search route does: a keyword
+// aimed at a Douyin creator has to be translated before it can match anything.
+export const handleRadarCreatorVideos = (req, res, fallbackApiKey = '') =>
+  radarRoute((body) =>
+    radar.getCreatorVideos(body, { geminiApiKey: (body.apiKey || '').trim() || fallbackApiKey })
+  )(req, res);

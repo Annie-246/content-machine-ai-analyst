@@ -6,6 +6,7 @@ import {
 } from '../services/apiKeyStore';
 import { postJson, getJson } from '../services/apiClient';
 import { DataSourcePanel } from './DataSourcePanel';
+import { GoogleDrivePanel } from './GoogleDrivePanel';
 
 type TestState = { status: 'idle' | 'testing' | 'ok' | 'fail'; message: string };
 
@@ -38,10 +39,10 @@ const CapabilityButtons: React.FC<{
             title={reason}
             className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-sm font-medium transition-colors
               ${isAssigned && !blocked
-                ? 'bg-[#dc2626] border-[#dc2626] text-white'
+                ? 'bg-[#A4145E] border-[#A4145E] text-white'
                 : blocked
                   ? 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-[#dc2626] hover:text-[#dc2626]'}`}
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-[#A4145E] hover:text-[#A4145E]'}`}
           >
             {isAssigned && !blocked ? <Check className="w-3.5 h-3.5" /> : !canDo ? <Ban className="w-3.5 h-3.5" /> : null}
             {cap.label}
@@ -58,9 +59,6 @@ export const IntegrationsPanel = () => {
   const [revealed, setRevealed] = useState<Partial<Record<ProviderId, boolean>>>({});
   const [saved, setSaved] = useState<ProviderId | null>(null);
   const [tests, setTests] = useState<Partial<Record<ProviderId, TestState>>>({});
-  const [serverDraft, setServerDraft] = useState(() => loadProviderSettings().serverUrl || '');
-  const [tokenDraft, setTokenDraft] = useState(() => loadProviderSettings().serverToken || '');
-  const [serverTest, setServerTest] = useState<TestState>({ status: 'idle', message: '' });
   // When the server carries its own key, users do not need to paste one.
   const [serverHasKey, setServerHasKey] = useState(false);
 
@@ -68,7 +66,7 @@ export const IntegrationsPanel = () => {
     getJson<{ hasServerKey: boolean }>('/api/health')
       .then((info) => setServerHasKey(!!info.hasServerKey))
       .catch(() => setServerHasKey(false));
-  }, [settings.serverUrl, settings.serverToken]);
+  }, []);
 
   const persist = (next: ProviderSettings) => {
     setSettings(next);
@@ -105,27 +103,6 @@ export const IntegrationsPanel = () => {
 
   const handleModelChange = (id: ProviderId, model: string) => {
     persist({ ...settings, models: { ...settings.models, [id]: model } });
-  };
-
-  const handleSaveServer = async () => {
-    const url = serverDraft.trim().replace(/\/+$/, '');
-    const token = tokenDraft.trim();
-
-    setServerTest({ status: 'testing', message: 'Đang kiểm tra máy chủ...' });
-    try {
-      const info = await getJson<{ ok: boolean; requiresToken: boolean; hasServerKey: boolean }>(
-        '/api/health', url, token,
-      );
-      persist({ ...settings, serverUrl: url, serverToken: token });
-      setServerTest({
-        status: 'ok',
-        message: info.hasServerKey
-          ? 'Máy chủ sẵn sàng và đã có sẵn API key, bạn không cần dán key riêng.'
-          : 'Máy chủ sẵn sàng. Nhớ dán API key bên dưới vì máy chủ chưa có key riêng.',
-      });
-    } catch (err: any) {
-      setServerTest({ status: 'fail', message: (err?.message || 'Không kết nối được.').slice(0, 250) });
-    }
   };
 
   const handleTest = async (id: ProviderId) => {
@@ -179,60 +156,15 @@ export const IntegrationsPanel = () => {
         có hiệu lực ngay, không cần sửa file cấu hình hay khởi động lại app.
       </p>
 
-      {/* Where the API lives */}
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-        <div className="flex items-center gap-2.5 mb-1.5">
-          <Server className="w-5 h-5 text-[#dc2626]" />
-          <h2 className="text-lg font-bold text-slate-900">Máy chủ xử lý</h2>
-        </div>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          Để trống nếu app và máy chủ chạy cùng một nơi. Nếu giao diện đang đặt trên Vercel hay Netlify,
-          hãy điền địa chỉ máy chủ đang chạy ở nơi khác.
-        </p>
-
-        <div className="mt-4 space-y-2.5">
-          <input
-            value={serverDraft}
-            onChange={(e) => setServerDraft(e.target.value)}
-            placeholder="https://ten-mien-cua-ban.trycloudflare.com"
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#dc2626] transition-colors font-mono"
-          />
-          <div className="flex gap-2.5">
-            <input
-              type="password"
-              value={tokenDraft}
-              onChange={(e) => setTokenDraft(e.target.value)}
-              placeholder="Khoá truy cập máy chủ (bỏ trống nếu máy chủ không đặt khoá)"
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#dc2626] transition-colors font-mono"
-            />
-            <button
-              onClick={handleSaveServer}
-              disabled={serverTest.status === 'testing'}
-              className="shrink-0 px-6 py-3 rounded-xl bg-[#dc2626] hover:bg-[#c70045] disabled:opacity-40 text-white font-medium transition-colors inline-flex items-center gap-2"
-            >
-              {serverTest.status === 'testing' ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              Lưu & kiểm tra
-            </button>
-          </div>
-        </div>
-
-        {serverTest.status === 'ok' && (
-          <p className="mt-3 text-sm text-emerald-700 font-medium flex items-start gap-1.5">
-            <Check className="w-4 h-4 shrink-0 mt-0.5" /> {serverTest.message}
-          </p>
-        )}
-        {serverTest.status === 'fail' && (
-          <p className="mt-3 text-sm text-red-700 flex items-start gap-1.5">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /> {serverTest.message}
-          </p>
-        )}
-
-        <p className="mt-3 text-xs text-slate-500">
-          Đang gọi tới: <code className="font-mono">{getServerUrl() || 'chính trang web này'}</code>
-        </p>
-      </div>
+      {/* The server used to be configurable here, back when the interface could
+          sit on Vercel while the API ran elsewhere. As a desktop app the two are
+          always the same process on loopback, so the field only ever offered a
+          way to break a working install. The settings underneath still exist and
+          default to empty, which means "talk to ourselves". */}
 
       <DataSourcePanel />
+
+      <GoogleDrivePanel />
 
       {/* Current routing at a glance */}
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
@@ -264,7 +196,7 @@ export const IntegrationsPanel = () => {
             <div
               key={provider.id}
               className={`rounded-2xl border p-6 transition-colors ${
-                isInUse ? 'border-[#dc2626] bg-[#fef2f2]/40' : 'border-slate-200 bg-white'
+                isInUse ? 'border-[#A4145E] bg-[#FDF2F7]/40' : 'border-slate-200 bg-white'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -272,7 +204,7 @@ export const IntegrationsPanel = () => {
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <h2 className="text-lg font-bold text-slate-900">{provider.name}</h2>
                     {isInUse && (
-                      <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[#dc2626] text-white">
+                      <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-[#A4145E] text-white">
                         Đang dùng
                       </span>
                     )}
@@ -294,7 +226,7 @@ export const IntegrationsPanel = () => {
                   href={provider.docsUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-[#dc2626] transition-colors"
+                  className="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-[#A4145E] transition-colors"
                 >
                   Lấy key <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -315,7 +247,7 @@ export const IntegrationsPanel = () => {
                   </button>
                   <button
                     onClick={() => handleRemoveKey(provider.id)}
-                    className="text-slate-400 hover:text-red-600 transition-colors"
+                    className="text-slate-400 hover:text-pink-600 transition-colors"
                     title="Xóa key này"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -330,12 +262,12 @@ export const IntegrationsPanel = () => {
                   onChange={(e) => setDrafts((d) => ({ ...d, [provider.id]: e.target.value }))}
                   onKeyDown={(e) => e.key === 'Enter' && handleSaveKey(provider.id)}
                   placeholder={storedKey ? 'Dán key mới để thay thế...' : `Dán API key (${provider.keyPrefix}...)`}
-                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#dc2626] transition-colors font-mono"
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#A4145E] transition-colors font-mono"
                 />
                 <button
                   onClick={() => handleSaveKey(provider.id)}
                   disabled={!draft.trim()}
-                  className="shrink-0 px-6 py-3 rounded-xl bg-[#dc2626] hover:bg-[#c70045] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium transition-colors"
+                  className="shrink-0 px-6 py-3 rounded-xl bg-[#A4145E] hover:bg-[#86104D] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium transition-colors"
                 >
                   {saved === provider.id ? <Check className="w-4 h-4" /> : 'Lưu'}
                 </button>
@@ -362,7 +294,7 @@ export const IntegrationsPanel = () => {
                     <input
                       value={settings.models[provider.id] ?? provider.defaultModel}
                       onChange={(e) => handleModelChange(provider.id, e.target.value)}
-                      className="w-56 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700 focus:outline-none focus:border-[#dc2626] transition-colors"
+                      className="w-56 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono text-slate-700 focus:outline-none focus:border-[#A4145E] transition-colors"
                       title="Tên model dùng cho nhà cung cấp này"
                     />
                   </div>
@@ -370,7 +302,7 @@ export const IntegrationsPanel = () => {
                   <button
                     onClick={() => handleTest(provider.id)}
                     disabled={test.status === 'testing'}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:border-[#dc2626] text-sm font-medium text-slate-700 hover:text-[#dc2626] transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:border-[#A4145E] text-sm font-medium text-slate-700 hover:text-[#A4145E] transition-colors disabled:opacity-50"
                   >
                     {test.status === 'testing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     Kiểm tra kết nối

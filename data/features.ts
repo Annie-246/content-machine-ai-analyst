@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  FileVideo, BarChart3, FileSearch, Clapperboard, Image as ImageIcon, Newspaper, Gauge,
+  FileVideo, BarChart3, FileSearch, Clapperboard, Image as ImageIcon, Newspaper, Gauge, PenLine,
 } from 'lucide-react';
 import { AnalysisMode } from '../types';
 
@@ -50,12 +50,12 @@ export const VIDEO_FEATURES: Feature[] = [
     mode: AnalysisMode.SCRIPT_EXTRACT,
     tab: 'video',
     title: 'Trích script video',
-    desc: 'Trích xuất kịch bản (script) từ video nhanh chóng và chính xác.',
+    desc: 'Trích xuất kịch bản (script) từ video, kèm bản dịch tiếng Việt nếu video nói tiếng nước ngoài.',
     icon: FileSearch,
     steps: [
       ['Nguồn video', 'Dán link hoặc tải lên'],
       ['Tùy chỉnh', 'Yêu cầu bổ sung'],
-      ['Kết quả', 'Script kèm mốc thời gian'],
+      ['Kết quả', 'Script gốc & bản dịch'],
     ],
   },
   {
@@ -74,12 +74,11 @@ export const VIDEO_FEATURES: Feature[] = [
     mode: AnalysisMode.VIDEO_SCORING,
     tab: 'video',
     title: 'Chấm điểm nội dung',
-    desc: 'Chấm điểm video theo bộ tiêu chí của thương hiệu.',
+    desc: 'Chấm video theo bộ tiêu chí bạn tự nạp, kèm gợi ý sửa từng chỗ mất điểm.',
     icon: Gauge,
-    soon: true,
     steps: [
       ['Nguồn video', 'Dán link hoặc tải lên'],
-      ['Tùy chỉnh', 'Bộ tiêu chí chấm'],
+      ['Bộ tiêu chí', 'Chọn checklist của bạn'],
       ['Kết quả', 'Bảng điểm chi tiết'],
     ],
   },
@@ -97,6 +96,19 @@ export const ARTICLE_FEATURES: Feature[] = [
       ['Nguồn bài viết', 'Link, text hoặc ảnh chụp'],
       ['Tùy chỉnh', 'Nội dung & giọng văn'],
       ['Kết quả', 'Bài viết mới sẵn sàng'],
+    ],
+  },
+  {
+    mode: AnalysisMode.ARTICLE_WRITING,
+    tab: 'article',
+    title: 'Viết bài',
+    desc: 'Từ ý tưởng sơ lược thành bài viết hoàn chỉnh, kèm nhiều hook để bạn chọn.',
+    icon: PenLine,
+    featured: true,
+    steps: [
+      ['Ý tưởng', 'Vài dòng phác thảo là đủ'],
+      ['Tùy chỉnh', 'Công thức, kênh & độ dài'],
+      ['Kết quả', 'Bài viết kèm hook gợi ý'],
     ],
   },
   {
@@ -128,12 +140,11 @@ export const ARTICLE_FEATURES: Feature[] = [
     mode: AnalysisMode.ARTICLE_SCORING,
     tab: 'article',
     title: 'Chấm điểm nội dung',
-    desc: 'Chấm điểm bài viết theo bộ tiêu chí của thương hiệu.',
+    desc: 'Chấm bài theo bộ tiêu chí bạn tự nạp, kèm gợi ý sửa từng chỗ mất điểm.',
     icon: Gauge,
-    soon: true,
     steps: [
       ['Nguồn bài viết', 'Link, text hoặc ảnh chụp'],
-      ['Tùy chỉnh', 'Bộ tiêu chí chấm'],
+      ['Bộ tiêu chí', 'Chọn checklist của bạn'],
       ['Kết quả', 'Bảng điểm chi tiết'],
     ],
   },

@@ -23,7 +23,7 @@ const SourceIcon: React.FC<{ source: BrandSource }> = ({ source }) => {
   if (source.status === 'error') return <AlertTriangle className="w-4 h-4 text-amber-600" />;
   if (source.kind === 'link') return <Globe className="w-4 h-4 text-red-600" />;
   if (source.kind === 'text') return <ClipboardType className="w-4 h-4 text-red-600" />;
-  return <FileText className="w-4 h-4 text-red-600" />;
+  return <FileText className="w-4 h-4 text-pink-600" />;
 };
 
 export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClose, brand, onApply }) => {
@@ -145,14 +145,14 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
   const nameField = (
     <div className="space-y-2">
       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-        <Building2 className="w-3.5 h-3.5 text-red-600" /> Tên thương hiệu
+        <Building2 className="w-3.5 h-3.5 text-pink-600" /> Tên thương hiệu
       </label>
       <input
         type="text"
         value={brandName}
         onChange={(e) => setBrandName(e.target.value)}
         placeholder="VD: Tên thương hiệu / kênh của bạn"
-        className="w-full bg-red-50/40 border border-red-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-500 focus:bg-white transition-colors"
+        className="w-full bg-pink-50/40 border border-pink-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:border-pink-500 focus:bg-white transition-colors"
       />
       <p className="text-[11px] text-slate-500">
         {suggestion?.fields.name?.value && suggestion.fields.name.value === brandName
@@ -164,10 +164,10 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white border border-red-200 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800">
-        <div className="px-6 py-4 bg-red-50 border-b border-red-200 flex items-center justify-between">
+      <div className="bg-white border border-pink-200 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-800">
+        <div className="px-6 py-4 bg-pink-50 border-b border-pink-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-red-100 text-red-700 rounded-xl border border-red-300 shadow-sm">
+            <div className="p-2.5 bg-pink-100 text-pink-700 rounded-xl border border-pink-300 shadow-sm">
               <Wand2 className="w-6 h-6" />
             </div>
             <div>
@@ -179,7 +179,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-2 rounded-lg hover:bg-red-100 transition-colors">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 p-2 rounded-lg hover:bg-pink-100 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -191,7 +191,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Link2 className="w-3.5 h-3.5 text-red-600" /> Website / Link mạng xã hội
+                  <Link2 className="w-3.5 h-3.5 text-pink-600" /> Website / Link mạng xã hội
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -205,12 +205,12 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                       }
                     }}
                     placeholder="VD: thuonghieucuaban.vn/gioi-thieu, facebook.com/trangcuaban, x.com/tenban/status/..."
-                    className="flex-1 bg-red-50/40 border border-red-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-red-500 focus:bg-white transition-colors"
+                    className="flex-1 bg-pink-50/40 border border-pink-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-pink-500 focus:bg-white transition-colors"
                   />
                   <button
                     type="button"
                     onClick={handleAddLink}
-                    className="px-4 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
+                    className="px-4 py-2.5 text-sm font-bold text-white bg-pink-600 hover:bg-pink-700 rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95 shrink-0"
                   >
                     <Plus className="w-4 h-4" /> Thêm
                   </button>
@@ -222,7 +222,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileUp className="w-3.5 h-3.5 text-red-600" /> File tài liệu
+                  <FileUp className="w-3.5 h-3.5 text-pink-600" /> File tài liệu
                 </label>
                 <input
                   ref={fileInputRef}
@@ -242,9 +242,9 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                     if (e.dataTransfer.files?.length) handleAddFiles(e.dataTransfer.files);
                   }}
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-red-200 hover:border-red-400 hover:bg-red-50/40 rounded-2xl p-5 text-center cursor-pointer transition-all"
+                  className="border-2 border-dashed border-pink-200 hover:border-pink-400 hover:bg-pink-50/40 rounded-2xl p-5 text-center cursor-pointer transition-all"
                 >
-                  <FileUp className="w-6 h-6 text-red-500 mx-auto mb-1.5" />
+                  <FileUp className="w-6 h-6 text-pink-500 mx-auto mb-1.5" />
                   <p className="text-sm font-semibold text-slate-700">Kéo thả hoặc bấm để chọn file</p>
                   <p className="text-[11px] text-slate-500 mt-0.5">PDF, TXT, MD, CSV, JSON, HTML - tối đa 12MB mỗi file</p>
                 </div>
@@ -252,20 +252,20 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <ClipboardType className="w-3.5 h-3.5 text-red-600" /> Hoặc dán thẳng nội dung
+                  <ClipboardType className="w-3.5 h-3.5 text-pink-600" /> Hoặc dán thẳng nội dung
                 </label>
                 <textarea
                   rows={3}
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
                   placeholder="Dán bài đăng tiêu biểu, mô tả sản phẩm, brief thương hiệu..."
-                  className="w-full bg-red-50/40 border border-red-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-red-500 focus:bg-white transition-colors resize-none"
+                  className="w-full bg-pink-50/40 border border-pink-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-pink-500 focus:bg-white transition-colors resize-none"
                 />
                 {pasteText.trim().length > 0 && (
                   <button
                     type="button"
                     onClick={handleAddPaste}
-                    className="text-xs font-semibold text-red-700 hover:text-red-900 flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-red-200 bg-white hover:bg-red-50 transition-colors"
+                    className="text-xs font-semibold text-pink-700 hover:text-pink-900 flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-pink-200 bg-white hover:bg-pink-50 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" /> Thêm nội dung này làm nguồn
                   </button>
@@ -302,7 +302,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                         <button
                           type="button"
                           onClick={() => setSources((prev) => prev.filter((s) => s.id !== source.id))}
-                          className="text-slate-400 hover:text-red-700 p-1 rounded-lg hover:bg-red-100 transition-colors shrink-0"
+                          className="text-slate-400 hover:text-pink-700 p-1 rounded-lg hover:bg-pink-100 transition-colors shrink-0"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -319,8 +319,8 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
               {nameField}
 
               {suggestion.summary && (
-                <div className="p-4 bg-red-50/70 border border-red-300 rounded-xl">
-                  <p className="text-xs font-bold text-red-900 uppercase tracking-wider mb-1.5">AI hiểu về thương hiệu này</p>
+                <div className="p-4 bg-pink-50/70 border border-pink-300 rounded-xl">
+                  <p className="text-xs font-bold text-pink-900 uppercase tracking-wider mb-1.5">AI hiểu về thương hiệu này</p>
                   <p className="text-sm text-slate-700 leading-relaxed">{suggestion.summary}</p>
                 </div>
               )}
@@ -334,7 +334,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                     <label
                       key={key}
                       className={`block p-3.5 rounded-xl border cursor-pointer transition-all ${
-                        checked ? 'bg-red-50 border-red-400 shadow-xs' : 'bg-white border-red-200 hover:border-red-300'
+                        checked ? 'bg-pink-50 border-pink-400 shadow-xs' : 'bg-white border-pink-200 hover:border-pink-300'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -342,7 +342,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                           type="checkbox"
                           checked={checked}
                           onChange={(e) => setPicked((prev) => ({ ...prev, [key]: e.target.checked }))}
-                          className="mt-1 w-4 h-4 accent-red-600 shrink-0"
+                          className="mt-1 w-4 h-4 accent-pink-600 shrink-0"
                         />
                         <div className="flex-1 min-w-0 space-y-1.5">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -388,7 +388,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
           )}
         </div>
 
-        <div className="px-6 py-4 bg-red-50/60 border-t border-red-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-4 bg-pink-50/60 border-t border-pink-200 flex flex-wrap items-center justify-between gap-3">
           <p className="text-[11px] text-slate-500">
             Chi phí tính vào: <strong className="text-slate-700">{describeBilling(hasFile)}</strong>
           </p>
@@ -398,7 +398,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                 <button
                   type="button"
                   onClick={reset}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-red-50 rounded-lg transition-colors border border-red-200 flex items-center gap-1.5"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-pink-50 rounded-lg transition-colors border border-pink-200 flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-4 h-4" /> Sửa nguồn
                 </button>
@@ -406,7 +406,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                   type="button"
                   onClick={handleApply}
                   disabled={pickedCount === 0}
-                  className="px-5 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2 transition-all border border-red-500 active:scale-95"
+                  className="px-5 py-2 text-sm font-bold text-white bg-pink-600 hover:bg-pink-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2 transition-all border border-pink-500 active:scale-95"
                 >
                   <Check className="w-4 h-4" /> Điền {pickedCount} mục đã chọn
                 </button>
@@ -416,7 +416,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-red-50 rounded-lg transition-colors border border-red-200"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-pink-50 rounded-lg transition-colors border border-pink-200"
                 >
                   Hủy
                 </button>
@@ -424,7 +424,7 @@ export const BrandLearnModal: React.FC<BrandLearnModalProps> = ({ isOpen, onClos
                   type="button"
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || readySources.length === 0}
-                  className="px-5 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2 transition-all border border-red-500 active:scale-95"
+                  className="px-5 py-2 text-sm font-bold text-white bg-pink-600 hover:bg-pink-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg shadow-sm flex items-center gap-2 transition-all border border-pink-500 active:scale-95"
                 >
                   {isAnalyzing ? (
                     <>

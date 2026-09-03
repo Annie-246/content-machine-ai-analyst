@@ -8,12 +8,8 @@
 // actor run. If translation fails for any reason we fall back to the original
 // keyword rather than blocking the scan.
 
-import { GoogleGenAI } from '@google/genai';
 import { cacheGet, cacheSet } from './cache.mjs';
-
-// Cheapest model in the chain server/handlers.mjs already uses. Translating four
-// words does not need the newest one.
-const TRANSLATE_MODEL = 'gemini-2.5-flash';
+import { generateText } from './llm.mjs';
 
 const TRANSLATE_TIMEOUT_MS = 15_000;
 
@@ -60,17 +56,11 @@ export const normalizeKeyword = async (keyword, apiKey) => {
   if (!key) return { query: original, translated: false, original };
 
   try {
-    const ai = new GoogleGenAI({ apiKey: key });
+    const text = await generateText(key, `${SYSTEM_PROMPT}\n\nKeyword: ${original}`, {
+      timeoutMs: TRANSLATE_TIMEOUT_MS,
+    });
 
-    const response = await Promise.race([
-      ai.models.generateContent({
-        model: TRANSLATE_MODEL,
-        contents: [{ role: 'user', parts: [{ text: `${SYSTEM_PROMPT}\n\nKeyword: ${original}` }] }],
-      }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), TRANSLATE_TIMEOUT_MS)),
-    ]);
-
-    const accepted = acceptTranslation(response?.text);
+    const accepted = acceptTranslation(text);
     if (!accepted) return { query: original, translated: false, original };
 
     cacheSet(cacheKey, accepted, TRANSLATION_TTL_MS);

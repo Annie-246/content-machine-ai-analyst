@@ -14,6 +14,9 @@ import { getTimeWindow } from './constants.mjs';
 export const filterByTimeWindow = (items, windowId, now = Date.now()) => {
   const win = getTimeWindow(windowId);
   if (!win) return items.slice();
+  // "Không giới hạn" keeps everything, including rows with no usable date -
+  // there is no window for them to fall outside of.
+  if (win.hours === null) return items.slice();
 
   const cutoff = now - win.hours * 3_600_000;
 

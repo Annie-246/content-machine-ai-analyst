@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     // read through process.env inside server/, never through `define`, so they
     // stay out of the browser bundle.
     for (const key of [
-      'YTDLP_PATH', 'YTDLP_COOKIES_FROM_BROWSER', 'YTDLP_COOKIES_FILE',
+      'YTDLP_PATH', 'YTDLP_COOKIES_FROM_BROWSER', 'YTDLP_COOKIES_FILE', 'FB_COOKIES_FILE',
       'APIFY_API_TOKEN', 'TIKHUB_API_KEY', 'RADAR_DOUYIN_SEARCH_ACTOR', 'RADAR_DOUYIN_PROFILE_ACTOR',
     ]) {
       if (env[key]) process.env[key] = env[key];

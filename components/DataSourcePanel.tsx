@@ -16,7 +16,7 @@ import {
 
 const inputClass =
   'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 ' +
-  'placeholder:text-slate-400 focus:outline-none focus:border-[#dc2626] transition-colors font-mono';
+  'placeholder:text-slate-400 focus:outline-none focus:border-[#A4145E] transition-colors font-mono';
 
 export const DataSourcePanel: React.FC = () => {
   const [keys, setKeys] = useState<Record<string, string>>(() =>
@@ -87,7 +87,7 @@ export const DataSourcePanel: React.FC = () => {
   return (
     <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
       <div className="flex items-center gap-2.5 mb-1.5">
-        <Database className="w-5 h-5 text-[#dc2626]" />
+        <Database className="w-5 h-5 text-[#A4145E]" />
         <h2 className="text-lg font-bold text-slate-900">Nguồn dữ liệu</h2>
       </div>
       <p className="text-sm text-slate-600 leading-relaxed">
@@ -119,7 +119,7 @@ export const DataSourcePanel: React.FC = () => {
                   href={provider.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#dc2626] hover:underline shrink-0"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#A4145E] hover:underline shrink-0"
                 >
                   Lấy API key <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -139,7 +139,7 @@ export const DataSourcePanel: React.FC = () => {
                   </button>
                   <button
                     onClick={() => clearShared(provider.id)}
-                    className="shrink-0 p-3 rounded-xl border border-slate-200 text-slate-500 hover:text-red-600 hover:border-red-200 transition-colors"
+                    className="shrink-0 p-3 rounded-xl border border-slate-200 text-slate-500 hover:text-pink-600 hover:border-pink-200 transition-colors"
                     title="Xoá key"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -158,7 +158,7 @@ export const DataSourcePanel: React.FC = () => {
                   <button
                     onClick={() => saveShared(provider.id)}
                     disabled={!draft.trim()}
-                    className="shrink-0 px-6 py-3 rounded-xl bg-[#dc2626] hover:bg-[#c70045] disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium transition-colors"
+                    className="shrink-0 px-6 py-3 rounded-xl bg-[#A4145E] hover:bg-[#86104D] disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium transition-colors"
                   >
                     Lưu
                   </button>
@@ -179,7 +179,7 @@ export const DataSourcePanel: React.FC = () => {
       <div className="mt-6 pt-5 border-t border-slate-100">
         <button
           onClick={() => setShowAdvanced((v) => !v)}
-          className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-[#dc2626] transition-colors"
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-slate-600 hover:text-[#A4145E] transition-colors"
         >
           <SlidersHorizontal className="w-4 h-4" />
           Tuỳ chỉnh theo từng nền tảng
@@ -206,7 +206,7 @@ export const DataSourcePanel: React.FC = () => {
                           onClick={() => chooseSource(platform.id, choice)}
                           className={`px-4 py-2 rounded-xl border text-[13px] font-semibold transition-colors
                             ${active
-                              ? 'border-[#dc2626] bg-[#fef2f2] text-[#dc2626]'
+                              ? 'border-[#A4145E] bg-[#FDF2F7] text-[#A4145E]'
                               : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}
                         >
                           {label}
@@ -248,7 +248,7 @@ export const DataSourcePanel: React.FC = () => {
                             </code>
                             <button
                               onClick={() => clearOverride(platform.id, source)}
-                              className="shrink-0 px-4 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-600 hover:text-red-600 hover:border-red-200 transition-colors"
+                              className="shrink-0 px-4 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-600 hover:text-pink-600 hover:border-pink-200 transition-colors"
                             >
                               Dùng lại key chung
                             </button>
@@ -266,7 +266,7 @@ export const DataSourcePanel: React.FC = () => {
                             <button
                               onClick={() => saveOverride(platform.id, source)}
                               disabled={!draft.trim()}
-                              className="shrink-0 px-5 py-2.5 rounded-xl border border-slate-200 text-[13px] font-medium text-slate-700 hover:border-[#dc2626] hover:text-[#dc2626] disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-700 transition-colors"
+                              className="shrink-0 px-5 py-2.5 rounded-xl border border-slate-200 text-[13px] font-medium text-slate-700 hover:border-[#A4145E] hover:text-[#A4145E] disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-700 transition-colors"
                             >
                               Lưu
                             </button>

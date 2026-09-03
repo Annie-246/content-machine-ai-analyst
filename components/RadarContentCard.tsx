@@ -6,8 +6,8 @@ import { formatCount, formatDuration, formatRelativeTime } from '../services/rad
 // Score bands, so a strong find reads as strong at a glance instead of being one
 // number among many.
 const scoreTone = (score: number): string => {
-  if (score >= 70) return 'bg-[#dc2626] text-white border-[#dc2626]';
-  if (score >= 45) return 'bg-[#fef2f2] text-[#dc2626] border-[#f8d3e0]';
+  if (score >= 70) return 'bg-[#A4145E] text-white border-[#A4145E]';
+  if (score >= 45) return 'bg-[#FDF2F7] text-[#A4145E] border-[#f8d3e0]';
   return 'bg-slate-50 text-slate-500 border-slate-200';
 };
 
@@ -130,7 +130,7 @@ export const RadarContentCard: React.FC<{ content: RadarContent }> = ({ content 
             href={content.videoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#dc2626] hover:underline shrink-0"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#A4145E] hover:underline shrink-0"
           >
             Xem video gốc <ExternalLink className="w-3.5 h-3.5" />
           </a>

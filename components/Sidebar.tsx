@@ -1,9 +1,9 @@
 import React from 'react';
-import { Home, LayoutGrid, Fingerprint, PenLine, Puzzle, ChevronDown, Radar } from 'lucide-react';
+import { Home, LayoutGrid, Fingerprint, Puzzle, ChevronDown, Radar, Waves, History, Users } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { APP_CONFIG } from '../data/appConfig';
 
-export type SidebarView = 'overview' | 'radar' | 'features' | 'brand-dna' | 'voice' | 'integrations';
+export type SidebarView = 'overview' | 'radar' | 'waterfall' | 'features' | 'history' | 'brand-dna' | 'integrations' | 'community';
 
 interface NavItem {
   id: SidebarView;
@@ -15,13 +15,15 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   { id: 'overview', label: 'Tổng quan', icon: Home },
   { id: 'radar', label: 'Content Radar', icon: Radar },
-  { id: 'features', label: 'Tính năng', icon: LayoutGrid },
+  { id: 'waterfall', label: 'Content Waterfall', icon: Waves },
+  { id: 'features', label: 'Content Creator', icon: LayoutGrid },
+  { id: 'history', label: 'Lịch sử nội dung', icon: History },
 ];
 
 const SETTINGS_NAV: NavItem[] = [
   { id: 'brand-dna', label: 'Brand DNA', icon: Fingerprint },
-  { id: 'voice', label: 'Giọng văn', icon: PenLine },
   { id: 'integrations', label: 'Tích hợp', icon: Puzzle },
+  { id: 'community', label: 'Cộng đồng & Hỗ trợ', icon: Users },
 ];
 
 const NavButton: React.FC<{ item: NavItem; active: boolean; onClick: () => void }> = ({ item, active, onClick }) => {
@@ -30,10 +32,10 @@ const NavButton: React.FC<{ item: NavItem; active: boolean; onClick: () => void 
     <button
       onClick={onClick}
       className={`relative w-full flex items-center gap-4 pl-8 pr-4 py-3.5 text-left transition-colors rounded-r-2xl
-        ${active ? 'bg-[#fef2f2] text-[#dc2626] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+        ${active ? 'bg-[#FBE7F0] text-[#A4145E] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
     >
-      {active && <span className="absolute left-0 top-1 bottom-1 w-1 rounded-r-full bg-[#dc2626]" />}
-      <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-[#dc2626]' : 'text-slate-400'}`} />
+      {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[5px] rounded-r-full bg-[#A4145E]" />}
+      <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-[#A4145E]' : 'text-slate-400'}`} />
       <span className="text-[15px]">{item.label}</span>
       {item.soon && (
         <span className="ml-auto text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
@@ -83,7 +85,7 @@ export const Sidebar = ({
 
       <div className="px-6 py-5 border-t border-slate-200">
         <button className="w-full flex items-center gap-3 text-left group">
-          <span className="w-10 h-10 rounded-full bg-[#dc2626] text-white flex items-center justify-center font-semibold shrink-0">
+          <span className="w-10 h-10 rounded-full bg-[#A4145E] text-white flex items-center justify-center font-semibold shrink-0">
             {teamName.charAt(0).toUpperCase()}
           </span>
           <span className="flex-1 min-w-0">

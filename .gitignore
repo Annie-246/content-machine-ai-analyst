@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# A cookie jar is a live login. Committing one hands over the account.
+cookies*.txt
+*cookies.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +26,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ban dong goi desktop, khong dua vao repo
+release/
