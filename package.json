@@ -66,6 +66,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "shortcutName": "Content Machine"
-    }
+    },
+    "electronDist": "node_modules/electron/dist"
   }
 }
