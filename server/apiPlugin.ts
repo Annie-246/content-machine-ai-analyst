@@ -4,6 +4,8 @@ import {
   applyCors, checkAccess, handlePreflight, serverInfo,
   handleRadarSearch, handleRadarCreators, handleRadarCreatorVideos, handleRadarSuggest,
 } from './handlers.mjs';
+// Tính năng ảnh nằm ở module riêng để không đụng vào handlers.mjs.
+import { handleCarouselRender, handleCarouselHealth } from './carouselRoute.mjs';
 
 // Mounts the same handlers the production server uses, so dev and deploy
 // behave identically.
@@ -26,6 +28,8 @@ export const apiPlugin = (fallbackApiKey: string): Plugin => ({
     server.middlewares.use('/api/radar/suggest-keywords', guard((req: any, res: any) => handleRadarSuggest(req, res, fallbackApiKey)));
     server.middlewares.use('/api/radar/creators', guard(handleRadarCreators));
     server.middlewares.use('/api/radar/creator-videos', guard((req: any, res: any) => handleRadarCreatorVideos(req, res, fallbackApiKey)));
+    server.middlewares.use('/api/carousel/render', guard((req: any, res: any) => handleCarouselRender(req, res)));
+    server.middlewares.use('/api/carousel/health', guard((req: any, res: any) => handleCarouselHealth(req, res)));
     server.middlewares.use('/api/health', (req: any, res: any) => {
       if (req.method === 'OPTIONS') return handlePreflight(req, res);
       applyCors(req, res);

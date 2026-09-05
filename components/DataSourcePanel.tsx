@@ -266,7 +266,7 @@ export const DataSourcePanel: React.FC = () => {
                             <button
                               onClick={() => saveOverride(platform.id, source)}
                               disabled={!draft.trim()}
-                              className="shrink-0 px-5 py-2.5 rounded-xl border border-slate-200 text-[13px] font-medium text-slate-700 hover:border-[#A4145E] hover:text-[#A4145E] disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-700 transition-colors"
+                              className="shrink-0 px-5 py-2.5 rounded-xl bg-[#A4145E] hover:bg-[#86104D] disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13px] font-semibold transition-colors"
                             >
                               Lưu
                             </button>

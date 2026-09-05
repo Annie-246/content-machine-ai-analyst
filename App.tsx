@@ -57,6 +57,7 @@ import { WorkflowStepper, SectionCard, RunStatus } from './components/WorkspaceS
 import { getFeature } from './data/features';
 import { IntegrationsPanel } from './components/IntegrationsPanel';
 import { CommunityPanel } from './components/CommunityPanel';
+import { CarouselStudio } from './components/CarouselStudio';
 import { ChecklistModal } from './components/ChecklistModal';
 import { listChecklistsFor, getChecklist } from './services/checklistStore';
 import { OverviewCommunity } from './components/OverviewCommunity';
@@ -71,7 +72,7 @@ import { HistoryPanel } from './components/HistoryPanel';
 import { purgeExpired, requestPersistence, dataUrlToBlob, type HistoryKind } from './services/historyStore';
 import { recordAndBackup } from './services/historyBackup';
 
-type AppView = 'overview' | 'radar' | 'waterfall' | 'features' | 'workspace' | 'history' | 'integrations' | 'community';
+type AppView = 'overview' | 'radar' | 'waterfall' | 'features' | 'workspace' | 'history' | 'integrations' | 'community' | 'carousel';
 
 const FEATURE_TITLES: Partial<Record<AnalysisMode, string>> = {
   [AnalysisMode.REMAKE_SCRIPT]: 'Remake kịch bản video',
@@ -96,6 +97,18 @@ type SourceKind = 'link' | 'upload' | 'screen' | 'text' | 'images';
 interface FeatureConfig {
   subtitle: string;
   sources: SourceKind[];
+  /**
+   * Cách đọc một link dán vào.
+   *
+   * Trước đây suy từ `sources`: có 'upload' thì tải video, không thì đọc chữ.
+   * Suy như vậy sai với những tính năng nhận cả hai loại nguồn - Remake bài viết
+   * dán link TikTok vào thì chỉ đọc được caption, model không xem được video và
+   * quay ra bịa nội dung. Nên chế độ đọc phải khai báo thẳng.
+   *  - 'video': luôn tải file (tính năng chỉ làm việc với video)
+   *  - 'text' : luôn đọc chữ (tính năng chỉ làm việc với bài viết)
+   *  - 'auto' : link mạng xã hội thì thử tải video trước, hỏng thì đọc chữ
+   */
+  linkMode?: 'video' | 'text' | 'auto';
   sourceLabel: string;
   sourceHint: string;
   linkPlaceholder?: string;
@@ -146,24 +159,31 @@ const FEATURE_CONFIG: Partial<Record<AnalysisMode, FeatureConfig>> = {
     actionLabel: 'Tạo kịch bản viral',
   },
   [AnalysisMode.CONTENT_AUDIT]: {
-    subtitle: 'Viết lại bài viết hiện có thành phiên bản mới chuẩn giọng văn thương hiệu.',
-    sources: ['link', 'text', 'images'],
-    sourceLabel: 'Bài viết gốc',
-    sourceHint: 'Link, text hoặc ảnh chụp bài',
-    linkPlaceholder: 'Dán link bài viết gốc (Facebook, Threads, blog...)',
-    textLabel: 'Nội dung bài viết gốc:',
+    subtitle: 'Viết lại nội dung có sẵn - bài viết, video hoặc audio - bằng giọng văn thương hiệu, giữ đúng nội dung gốc.',
+    sources: ['link', 'upload', 'text', 'images'],
+    linkMode: 'auto',
+    sourceLabel: 'Nội dung gốc',
+    sourceHint: 'Link, video, audio, text hoặc ảnh chụp bài',
+    linkPlaceholder: 'Dán link bài viết hoặc link video (Facebook, Threads, blog, TikTok, YouTube...)',
+    textLabel: 'Nội dung gốc (bỏ trống được nếu đã dán link hoặc tải file):',
     textPlaceholder: 'Dán nội dung bài viết cần remake vào đây...',
-    actionLabel: 'Remake bài viết chuẩn thương hiệu',
+    actionLabel: 'Remake thành bài đăng chuẩn thương hiệu',
+    uploadLabel: 'Hoặc kéo thả video, audio cần chuyển thành bài viết',
   },
   [AnalysisMode.ARTICLE_WRITING]: {
-    subtitle: 'Từ vài dòng ý tưởng thành bài viết hoàn chỉnh, viết theo đúng những gì làm nên một bài hiệu quả.',
-    sources: ['text', 'link', 'images'],
-    sourceLabel: 'Ý tưởng của bạn',
-    sourceHint: 'Ý tưởng thô, link tham khảo hoặc ảnh',
-    linkPlaceholder: 'Dán link bài viết, tài liệu để lấy thêm chất liệu (không bắt buộc)...',
-    textLabel: 'Ý tưởng bài viết (chỉ cần vài dòng):',
+    subtitle: 'Từ vài dòng ý tưởng, hoặc từ một link bài viết / video có sẵn, thành bài viết hoàn chỉnh đúng giọng thương hiệu.',
+    sources: ['link', 'upload', 'text', 'images'],
+    // Link video thì phải tải video về cho model xem. Trước đây tính năng này
+    // đọc link dạng chữ, nên dán link TikTok kể case study vào chỉ lấy được
+    // caption vài dòng rồi model viết bừa cho đủ bài.
+    linkMode: 'auto',
+    sourceLabel: 'Ý tưởng hoặc nguồn gốc',
+    sourceHint: 'Ý tưởng thô, link bài viết / video, file hoặc ảnh',
+    linkPlaceholder: 'Dán link bài viết hoặc video (Facebook, TikTok, YouTube, Reels, blog...) - AI tải về, đọc kỹ rồi viết bám theo nội dung đó',
+    textLabel: 'Ý tưởng / yêu cầu cho bài viết (bỏ trống được nếu đã dán link - khi đó AI viết bám đúng nội dung trong link):',
     textPlaceholder: 'VD: Muốn viết bài chia sẻ về việc nhiều shop chạy ads mà không ra đơn, nguyên nhân thật nằm ở sản phẩm chứ không phải ngân sách...',
     actionLabel: 'Viết bài kèm hook gợi ý',
+    uploadLabel: 'Hoặc kéo thả file video, audio để AI xem rồi viết bài từ đó',
   },
   [AnalysisMode.ARTICLE_ANALYSIS]: {
     subtitle: 'Mổ xẻ một bài viết hay để hiểu vì sao nó hiệu quả. Chỉ phân tích, không chấm điểm và không viết lại.',
@@ -433,14 +453,20 @@ const App = () => {
       return;
     }
 
-    const type = file.type.startsWith('video') ? 'video' : 
+    const type = file.type.startsWith('video') ? 'video' :
                  file.type.startsWith('audio') ? 'audio' : 'image';
-    
-    if (type === 'image') {
-      setSelectedMode(AnalysisMode.CONTENT_AUDIT);
-    } else if (type === 'audio') {
-      if (selectedMode !== AnalysisMode.CONTENT_AUDIT && selectedMode !== AnalysisMode.SCRIPT_GENERATION) {
-        setSelectedMode(AnalysisMode.REMAKE_SCRIPT);
+
+    // Tính năng đang mở mà tự nhận file thì giữ nguyên: đang ở "Viết bài" kéo
+    // video vào là muốn viết bài từ video đó, không phải muốn nhảy sang Remake.
+    // Chỉ những tính năng không có ô tải file mới cần đổi sang chỗ xử lý được.
+    const acceptsUpload = FEATURE_CONFIG[selectedMode]?.sources.includes('upload');
+    if (!acceptsUpload) {
+      if (type === 'image') {
+        setSelectedMode(AnalysisMode.CONTENT_AUDIT);
+      } else if (type === 'audio') {
+        if (selectedMode !== AnalysisMode.CONTENT_AUDIT && selectedMode !== AnalysisMode.SCRIPT_GENERATION) {
+          setSelectedMode(AnalysisMode.REMAKE_SCRIPT);
+        }
       }
     }
 
@@ -623,7 +649,10 @@ const App = () => {
     if (!urlInput.trim()) return;
 
     // Only the video features need the file itself; the rest read the page.
-    const wantsVideo = featureConfig.sources.includes('upload') || featureConfig.sources.includes('screen');
+    const linkMode = featureConfig.linkMode
+      || (featureConfig.sources.includes('upload') || featureConfig.sources.includes('screen') ? 'video' : 'text');
+    // Chỉ chế độ thuần video mới dọn sạch nguồn cũ; 'auto' có thể quay về đọc chữ.
+    const wantsVideo = linkMode === 'video';
 
     setLoading({ isLoading: true, message: 'Đang kết nối liên kết...', step: 1 });
     setError('');
@@ -638,7 +667,7 @@ const App = () => {
 
     try {
       const { fileData: loaded, warning } = await loadLinkSource(urlInput.trim(), {
-        mode: wantsVideo ? 'video' : 'text',
+        mode: linkMode,
         withComments: readComments,
         onProgress: (message) => setLoading({ isLoading: true, message, step: 1 }),
       });
@@ -890,6 +919,9 @@ const App = () => {
       case 'community':
         setView('community');
         break;
+      case 'carousel':
+        setView('carousel');
+        break;
     }
   };
 
@@ -946,6 +978,8 @@ const App = () => {
         {view === 'integrations' && <IntegrationsPanel />}
 
         {view === 'community' && <CommunityPanel />}
+
+        {view === 'carousel' && <CarouselStudio />}
 
         {view === 'overview' && (
           <div className="max-w-5xl">

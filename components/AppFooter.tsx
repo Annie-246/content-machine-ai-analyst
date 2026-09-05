@@ -29,7 +29,7 @@ export const AppFooter: React.FC<{ onOpenCommunity: () => void }> = ({ onOpenCom
 
   return (
     <footer className="mt-auto bg-slate-900 text-white">
-      <div className="px-10 py-6 flex flex-col lg:flex-row lg:items-center gap-6">
+      <div className="px-5 sm:px-10 py-5 sm:py-6 flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-6">
         {/* Thương hiệu cộng đồng */}
         <button
           onClick={() => (skool.url ? open(skool.url) : onOpenCommunity())}
@@ -62,7 +62,10 @@ export const AppFooter: React.FC<{ onOpenCommunity: () => void }> = ({ onOpenCom
         )}
 
         {/* Hành động */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* shrink-0 ở đây từng làm cụm nút giữ nguyên bề ngang max-content, nên
+            flex-wrap không bao giờ có cơ hội xuống dòng và cả trang tràn ngang
+            trong khoảng 1024-1100px. */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {hasDonate && (
             <button
               onClick={onOpenCommunity}

@@ -6,6 +6,16 @@ bóc tách kịch bản, phân tích bài viết và tạo nội dung mới theo
 App **không gắn với thương hiệu nào**. Lần đầu mở, bạn tạo Brand DNA của riêng mình; mọi prompt gửi cho AI
 đều sinh ra từ hồ sơ đó. Có thể tạo nhiều thương hiệu và chuyển qua lại trong cùng một bản cài đặt.
 
+## Tải app Windows
+
+Bản đóng gói sẵn nằm ở trang [Releases](https://github.com/Annie-246/content-machine-ai-analyst/releases/latest),
+không cần cài Node.js:
+
+- `Content Machine Setup <phiên bản>.exe`: bản cài đặt, có shortcut.
+- `Content Machine <phiên bản>.exe`: bản chạy ngay, không cần cài.
+
+Máy vẫn cần `yt-dlp` để tải video (xem bảng bên dưới) và Chrome hoặc Edge để Carousel Studio dựng ảnh.
+
 ## Yêu cầu hệ thống
 
 | Thành phần | Bắt buộc | Dùng để làm gì |

@@ -23,9 +23,9 @@ export const OverviewCommunity: React.FC<{ onOpenCommunity: () => void }> = ({ o
   const open = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
 
   return (
-    <div className="mt-14 pt-10 border-t-2 border-slate-200">
+    <div className="mt-10 sm:mt-14 pt-8 sm:pt-10 border-t-2 border-slate-200">
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-2xl font-bold text-slate-900">Cộng đồng &amp; Hỗ trợ</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Cộng đồng &amp; Hỗ trợ</h2>
         <button
           onClick={onOpenCommunity}
           className="text-[15px] font-semibold text-[#A4145E] hover:underline shrink-0"
@@ -38,7 +38,7 @@ export const OverviewCommunity: React.FC<{ onOpenCommunity: () => void }> = ({ o
         {!!skool.url && (
           <button
             onClick={() => open(skool.url)}
-            className="text-left rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-7 hover:shadow-xl hover:-translate-y-0.5 transition-all group"
+            className="text-left rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-5 sm:p-7 hover:shadow-xl hover:-translate-y-0.5 transition-all group"
           >
             <XmaiLogo className="w-11 h-11 ring-1 ring-slate-900/10 rounded-[10px]" />
             <p className="mt-4 text-lg font-bold text-slate-900 leading-snug">{skool.name}</p>
@@ -52,7 +52,7 @@ export const OverviewCommunity: React.FC<{ onOpenCommunity: () => void }> = ({ o
         {!!booking.url && (
           <button
             onClick={() => open(booking.url)}
-            className="text-left rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-7 hover:shadow-xl hover:-translate-y-0.5 transition-all group"
+            className="text-left rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-5 sm:p-7 hover:shadow-xl hover:-translate-y-0.5 transition-all group"
           >
             <span className="w-11 h-11 rounded-2xl bg-[#A4145E] flex items-center justify-center">
               <CalendarCheck className="w-6 h-6 text-white" />
@@ -68,7 +68,7 @@ export const OverviewCommunity: React.FC<{ onOpenCommunity: () => void }> = ({ o
         {hasDonate && (
           <button
             onClick={onOpenCommunity}
-            className="text-left rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-7 hover:shadow-xl hover:-translate-y-0.5 transition-all group"
+            className="text-left rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-5 sm:p-7 hover:shadow-xl hover:-translate-y-0.5 transition-all group"
           >
             <span className="w-11 h-11 rounded-2xl bg-[#A4145E] flex items-center justify-center">
               <Heart className="w-6 h-6 text-white" fill="currentColor" />

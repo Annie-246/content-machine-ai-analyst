@@ -1,9 +1,9 @@
 import React from 'react';
-import { Home, LayoutGrid, Fingerprint, Puzzle, ChevronDown, Radar, Waves, History, Users, X } from 'lucide-react';
+import { Home, LayoutGrid, Fingerprint, Puzzle, ChevronDown, Radar, Waves, History, Users, X, Images } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { APP_CONFIG } from '../data/appConfig';
 
-export type SidebarView = 'overview' | 'radar' | 'waterfall' | 'features' | 'history' | 'brand-dna' | 'integrations' | 'community';
+export type SidebarView = 'overview' | 'radar' | 'waterfall' | 'features' | 'history' | 'brand-dna' | 'integrations' | 'community' | 'carousel';
 
 interface NavItem {
   id: SidebarView;
@@ -18,6 +18,7 @@ const MAIN_NAV: NavItem[] = [
   { id: 'waterfall', label: 'Content Waterfall', icon: Waves },
   { id: 'features', label: 'Content Creator', icon: LayoutGrid },
   { id: 'history', label: 'Lịch sử nội dung', icon: History },
+  { id: 'carousel', label: 'Carousel Studio', icon: Images },
 ];
 
 const SETTINGS_NAV: NavItem[] = [
@@ -72,10 +73,13 @@ export const Sidebar = ({
       />
     )}
 
+    {/* Màn rộng phải trả lại left/bottom: sticky mà vẫn giữ left-0 sẽ dính cả
+        theo chiều ngang, nên chỉ cần trang lỡ tràn ngang là thanh bên đứng im
+        đè lên nội dung đang cuộn bên dưới. */}
     <aside
       className={`w-[300px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-screen
         fixed inset-y-0 left-0 z-50 transition-transform duration-200
-        lg:sticky lg:top-0 lg:z-auto lg:translate-x-0
+        lg:sticky lg:top-0 lg:bottom-auto lg:left-auto lg:z-auto lg:translate-x-0
         ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}
     >
       <div className="px-8 py-6 border-b border-slate-200 flex items-center justify-between gap-3">

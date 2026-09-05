@@ -35,6 +35,14 @@ export const isModelUnavailable = (error) => {
     /no longer available|not available|NOT_FOUND|is not found|does not exist|unsupported model|permission.*model/i.test(text);
 };
 
+/**
+ * Model này không kịp trả lời trong hạn. Đo trên tài khoản thật: cùng một lúc,
+ * gemini-3.6-flash mất 26 giây trong khi gemini-2.5-flash trả lời trong 1 giây.
+ * Nên hết giờ ở một model KHÔNG có nghĩa là Gemini đang hỏng - nó chỉ có nghĩa
+ * là nên hỏi model kế tiếp.
+ */
+export const isTimeout = (error) => /timeout/i.test(error?.message || '');
+
 export class LlmUnavailableError extends Error {
   constructor(message) {
     super(message);
@@ -87,6 +95,10 @@ export const generateText = async (apiKey, prompt, opts = {}) => {
         skipped.push(`${model} (hết quota hoặc quá tải)`);
         continue;
       }
+      if (isTimeout(err)) {
+        skipped.push(`${model} (quá ${timeoutMs / 1000}s không trả lời)`);
+        continue;
+      }
       // Anything else - a bad prompt, a malformed request - would fail the same
       // way on every model, so stop rather than burn the chain.
       break;
@@ -104,8 +116,12 @@ export const generateText = async (apiKey, prompt, opts = {}) => {
       'Bạn vẫn gõ từ khoá thủ công và quét bình thường được.'
     );
   }
-  if (/timeout/i.test(lastError?.message || '')) {
-    throw new LlmUnavailableError('Gemini phản hồi quá chậm. Thử lại sau ít phút.');
+  if (isTimeout(lastError)) {
+    throw new LlmUnavailableError(
+      `Không model Gemini nào trả lời trong ${timeoutMs / 1000} giây. ` +
+      'Thường là do máy chủ Google đang tải nặng - thử lại sau ít phút, ' +
+      'hoặc gõ từ khoá thủ công rồi quét bình thường.'
+    );
   }
   throw new LlmUnavailableError(
     `Gemini báo lỗi: ${String(lastError?.message || 'không xác định').slice(0, 200)}`

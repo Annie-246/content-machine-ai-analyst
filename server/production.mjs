@@ -11,6 +11,7 @@ import {
   applyCors, checkAccess, handlePreflight, serverInfo,
   handleRadarSearch, handleRadarCreators, handleRadarCreatorVideos, handleRadarSuggest,
 } from './handlers.mjs';
+import { handleCarouselRender, handleCarouselHealth } from './carouselRoute.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
@@ -66,6 +67,8 @@ const server = createServer(async (req, res) => {
     if (pathname === '/api/fetch-source') return await handleFetchSource(req, res);
     if (pathname === '/api/llm') return await handleLlm(req, res);
     if (pathname === '/api/gemini') return await handleGemini(req, res, FALLBACK_KEY);
+    if (pathname === '/api/carousel/render') return await handleCarouselRender(req, res);
+    if (pathname === '/api/carousel/health') return await handleCarouselHealth(req, res);
     if (pathname === '/api/radar/search') return await handleRadarSearch(req, res, FALLBACK_KEY);
     if (pathname === '/api/radar/suggest-keywords') return await handleRadarSuggest(req, res, FALLBACK_KEY);
     if (pathname === '/api/radar/creators') return await handleRadarCreators(req, res);

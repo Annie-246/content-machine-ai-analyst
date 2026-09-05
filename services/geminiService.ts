@@ -100,23 +100,27 @@ Nhiệm vụ của bạn:
     case AnalysisMode.CONTENT_AUDIT:
     case AnalysisMode.CONTENT_REMAKE:
       return `Bạn là Content Creator chuyên nghiệp của thương hiệu ${brandName}${industrySuffix}.
-Nhiệm vụ: Phân tích bài viết viral mẫu (được cung cấp ở input), bóc tách cấu trúc/angle/nhịp điệu của bài đó và VIẾT LẠI (Remake) thành một bài viết hoàn toàn mới cho ${brandName}.
+Nhiệm vụ: nhận một nội dung có sẵn (bài viết, video, audio, ảnh - dán trực tiếp hoặc lấy từ link) và VIẾT LẠI nó thành một bài đăng mang giọng văn của ${brandName}, giữ đúng nội dung gốc.
 
-1. NGUYÊN TẮC REMAKE:
-- Học theo: Cấu trúc mở bài (Hook), cách dẫn dắt tình huống, cách tạo cảm xúc/tò mò của bài mẫu.
-- Thay đổi: Biến toàn bộ nội dung, câu chuyện, ví dụ và giải pháp thành sản phẩm/dịch vụ của ${brandName}. Tuyệt đối không sao chép nguyên văn câu chữ.
+1. NGUỒN LÀ SỰ THẬT DUY NHẤT:
+- Phải đọc / xem / nghe hết nguồn trước khi viết. Nguồn là video thì nội dung nằm trong lời nói và hình ảnh của video, không phải trong caption.
+- Bài viết lại phải kể đúng những gì nguồn nói: cùng chủ đề, cùng dữ kiện, cùng câu chuyện, cùng kết luận. KHÔNG thêm chi tiết, số liệu, ví dụ hay câu chuyện mà nguồn không có. KHÔNG đổi câu chuyện của nguồn thành câu chuyện của ${brandName}.
+- Không xem được nguồn thì nói thẳng, không tự nghĩ ra nội dung.
 
-2. TONE & VOICE:
+2. HỌC TỪ NGUỒN, KHÔNG CHÉP NGUỒN:
+- Giữ lại cái làm nguồn hiệu quả: cách mở bài, cách dẫn dắt, nhịp điệu, cách tạo cảm xúc.
+- Diễn đạt lại hoàn toàn bằng chữ của mình, không dùng lại nguyên văn câu chữ của nguồn.
+
+3. TONE & VOICE:
 - Sắc thái chủ đạo: ${voice}.
 - Xưng hô: người nói xưng "${speaker}", gọi khán giả là "${audience}".
 - Ngôn ngữ: Tự nhiên, đúng ngữ cảnh ngành hàng, không hù dọa, không quá học thuật, không giật gân phản cảm.
 
-3. QUY TẮC AN TOÀN SẢN PHẨM:
-- Chỉ sử dụng các claim, thành phần, công dụng có trong thông tin được cung cấp, không tự bịa đặt tính năng.
+4. QUY TẮC AN TOÀN SẢN PHẨM:
+- Sản phẩm / dịch vụ của ${brandName} chỉ xuất hiện ở phần kết hoặc CTA, và chỉ với claim, thành phần, công dụng có trong thông tin được cung cấp. Không tự bịa đặt tính năng.
 
-4. CẤU TRÚC CUỐI BÀI:
+5. CẤU TRÚC CUỐI BÀI:
 ${footerRule}`;
-
     case AnalysisMode.SCRIPT_GENERATION:
       return `Bạn là Content Creator & Biên kịch Video Ngắn hàng đầu của thương hiệu ${brandName}${industrySuffix}. Biến ý tưởng thành kịch bản sản xuất hoàn chỉnh theo cấu trúc viral, đúng giọng văn thương hiệu (${voice}), đúng xưng hô "${speaker}" ➔ "${audience}" và kết bài đúng chuẩn.`;
 
@@ -152,7 +156,9 @@ Nguyên tắc bắt buộc:
 
     case AnalysisMode.ARTICLE_WRITING:
       return `Bạn là Cây bút Nội dung Viral kiêm Chuyên gia Tâm lý Người đọc, viết cho thương hiệu ${brandName}${industrySuffix}.
-Nhiệm vụ: từ một ý tưởng còn thô sơ của người dùng, viết ra bài đăng hoàn chỉnh, đăng được ngay.
+Nhiệm vụ: viết ra một bài đăng hoàn chỉnh, đăng được ngay. Đầu vào là một trong hai:
+- Một ý tưởng còn thô sơ của người dùng: bạn mở nó ra thành bài đủ sâu.
+- Một NGUỒN có sẵn (video, bài viết, ảnh lấy từ link hoặc file): bạn phải hiểu kỹ nguồn trước, rồi viết bài BÁM ĐÚNG nội dung nguồn bằng lời của thương hiệu. Có nguồn thì nguồn là sự thật duy nhất - không thêm dữ kiện nguồn không nói, không chép nguyên văn nguồn.
 
 BỘ TIÊU CHÍ NGẦM - đây chính là những gì làm nên một bài viết hiệu quả, rút ra từ việc mổ xẻ các bài đang chạy tốt. Bạn PHẢI viết sao cho bài đạt được từng điểm dưới đây, nhưng TUYỆT ĐỐI KHÔNG liệt kê hay giảng giải chúng trong bài:
 1. HOOK: câu đầu tiên phải chặn được ngón tay đang lướt. Nó phải chạm vào một nỗi đau, một nghịch lý, một con số bất ngờ hoặc một điều người đọc tưởng mình đã biết mà hoá ra không phải.
@@ -216,15 +222,91 @@ const HTML_OUTPUT_RULES = `
 - Mọi bảng phải có <thead> chứa <th> và <tbody> chứa <td> đầy đủ (không để trống ô, thiếu thì ghi "—") để người dùng xuất được sang Excel/Google Sheets, và luôn bọc bảng trong <div class="overflow-x-auto">.
 =======================================================`;
 
-const getPrompt = (
+// What actually got attached to the request, so a prompt can point the model
+// at the right thing ("watch the video above") instead of guessing.
+type PromptSourceKind = 'video' | 'audio' | 'image' | 'text' | 'images';
+
+// Shared by every feature that rewrites an existing source (Remake bài viết,
+// Viết bài từ link). The model is told what is attached, made to go through
+// all of it before writing, and held to the source's facts. Left to itself it
+// treats the source as a loose suggestion and fills the gaps with invented
+// detail - a brand story nobody told, numbers nobody quoted.
+interface SourceContext {
+  sourceKinds: PromptSourceKind[];
+  url?: string;
+  /** Text the user pasted as the source itself, not as a brief. */
+  pastedText?: string;
+}
+
+const describeSources = ({ sourceKinds, url, pastedText }: SourceContext): string => {
+  const lines: string[] = [];
+  if (sourceKinds.includes('video')) lines.push('- VIDEO GỐC đính kèm ở trên: xem và nghe TOÀN BỘ từ đầu đến cuối. Nội dung chính nằm trong lời nói và hình ảnh của video; caption và số liệu tương tác chỉ là phụ.');
+  if (sourceKinds.includes('audio')) lines.push('- FILE ÂM THANH đính kèm ở trên: nghe hết, ghi lại đầy đủ ý.');
+  if (sourceKinds.includes('text')) lines.push('- NỘI DUNG CHỮ trích từ link (khối "NỘI DUNG GỐC ĐÃ TRÍCH XUẤT" ở trên): đây là nguyên văn bài gốc, đọc hết.');
+  if (sourceKinds.includes('image') || sourceKinds.includes('images')) lines.push('- ẢNH đính kèm ở trên: đọc hết chữ trong ảnh, coi là một phần chính thức của nguồn.');
+  if (pastedText) lines.push(`- NỘI DUNG NGƯỜI DÙNG DÁN TRỰC TIẾP (nguyên văn nguồn):\n"""\n${pastedText}\n"""`);
+  if (url) lines.push(`- LINK GỐC: ${url}`);
+  if (url && !sourceKinds.length && !pastedText) lines.push('- Chưa tải được nội dung phía sau link. Chỉ dùng những gì có thật ở trên, KHÔNG suy đoán nội dung link.');
+  return lines.join('\n      ');
+};
+
+// How to read the source, and how far the rewrite may stray from it.
+const sourceFidelityRules = (brandLabel: string): string => `
+      BƯỚC 1 - HIỂU KỸ NGUỒN TRƯỚC KHI VIẾT (bắt buộc, làm trước mọi thứ khác)
+      Đi hết nguồn từ đầu đến cuối. Với video: nghe toàn bộ lời thoại, đọc hết chữ trên màn hình, để ý hình ảnh minh hoạ. Ghi lại:
+      - Nguồn nói về điều gì, nhắm tới ai.
+      - Thương hiệu / nhân vật / sản phẩm được nhắc tới - đúng tên như nguồn gọi.
+      - Toàn bộ dữ kiện, con số, mốc thời gian, tên riêng - nguyên văn.
+      - Mạch nội dung theo thứ tự: nguồn dẫn dắt từ đâu tới đâu.
+      - Câu nói hoặc ý đắt nhất của nguồn.
+      - Thông điệp hoặc bài học nguồn chốt lại.
+      Bài viết ở các bước sau CHỈ được dùng chất liệu đã ghi ở đây.
+
+      NGUYÊN TẮC BÁM NGUỒN (luôn áp dụng khi có nguồn):
+      - GIỮ ĐÚNG: chủ đề, thông điệp chính, mọi dữ kiện / con số / tên riêng / mốc thời gian, mạch lập luận hoặc diễn biến câu chuyện, và kết luận nguồn rút ra. Người đã xem nguồn đọc bài này phải thấy "đúng là nội dung đó".
+      - KHÔNG THÊM: số liệu, nhận định, nguyên nhân, ví dụ, lời khuyên mà nguồn không hề nói. Câu chuyển ý chỉ để nối mạch, không được thành luận điểm mới.
+      - KHÔNG BỎ ý chính của nguồn. Được lược chi tiết phụ, không được lược ý chính.
+      - Nguồn là case study hay câu chuyện của một thương hiệu / nhân vật khác: giữ đúng tên, kể đúng như nguồn kể. TUYỆT ĐỐI KHÔNG biến nó thành trải nghiệm hay thành tích của ${brandLabel}, không nhét sản phẩm của ${brandLabel} vào giữa câu chuyện.
+      - ${brandLabel} chỉ xuất hiện ở: giọng văn, xưng hô, và (nếu thật sự hợp) một góc nhìn hay bài học ngắn ở phần kết cùng CTA.
+
+      QUY TẮC VIẾT LẠI ĐỂ KHÔNG BỊ COI LÀ SAO CHÉP:
+      - Không chép nguyên văn: không dùng lại bất kỳ chuỗi nào từ 8 từ liên tiếp trở lên của nguồn, trừ tên riêng, số liệu, thuật ngữ, hoặc câu trích dẫn đặt trong ngoặc kép và ghi rõ ai nói.
+      - Đổi cách kể: mở bài, thứ tự trình bày, cách chuyển ý, cách chốt đi theo giọng thương hiệu và công thức đã chọn (nếu có), không bám từng câu của nguồn.
+      - Diễn đạt lại bằng từ vựng của thương hiệu, nhịp câu của mình. Ý giữ nguyên, chữ phải mới.
+      - Nguồn tiếng nước ngoài thì viết lại như người Việt nói, không bê cấu trúc câu gốc sang.`;
+
+// What the user asked for on top of the source, and how it ranks against it.
+const sourceBriefRules = (idea: string, brief: string): string =>
+  idea || brief
+    ? `YÊU CẦU CỦA NGƯỜI DÙNG - ƯU TIÊN CAO NHẤT:
+      ${idea ? `- Ý tưởng / định hướng: "${idea}"` : ''}
+      ${brief ? `- Yêu cầu bổ sung: "${brief}"` : ''}
+      Yêu cầu này quyết định góc nhìn, trọng tâm, đối tượng, độ dài, điều cần nhấn hay cần bỏ. Chỗ nào yêu cầu nói tới thì làm theo yêu cầu; chỗ nào yêu cầu không nhắc thì vẫn bám nguồn như trên. Nguồn là kho chất liệu để phục vụ yêu cầu: lấy dữ kiện, câu chuyện, con số, lập luận từ đó. Nếu yêu cầu cần một chi tiết mà nguồn không có: dùng cách nói chung, KHÔNG bịa rồi gán cho nguồn, và nói rõ điều đó ở cuối phần NỘI DUNG RÚT RA TỪ NGUỒN.`
+    : `NGƯỜI DÙNG KHÔNG ĐƯA Ý TƯỞNG HAY YÊU CẦU RIÊNG: viết bài kể lại đúng nội dung nguồn theo nguyên tắc trên. Không tự đổi góc nhìn, không mở rộng sang chủ đề nguồn không nói, không thêm lời khuyên của riêng bạn.`;
+
+// The visible read-back of BƯỚC 1, so the user can check the model understood
+// the source before trusting the article built on it.
+const SOURCE_EXTRACT_SPEC = `Kết quả của BƯỚC 1, viết gọn để người dùng kiểm tra được bạn đã hiểu đúng nguồn chưa:
+      - Nguồn nói về: một câu.
+      - Thương hiệu / nhân vật / sản phẩm được nhắc: liệt kê đúng tên.
+      - Dữ kiện và con số (nguyên văn từ nguồn): gạch đầu dòng. Nguồn không có số liệu thì ghi "nguồn không nêu số liệu".
+      Số liệu tương tác của chính video (lượt xem, thích, bình luận, chia sẻ) KHÔNG phải nội dung nguồn: không đưa vào phần này, không đưa vào bài.
+      - Mạch nội dung: các ý chính theo đúng thứ tự nguồn trình bày.
+      - Thông điệp / bài học nguồn chốt lại: một hai câu.
+      Mọi thứ trong phần này phải có thật trong nguồn. Không đọc / xem được nguồn thì nói thẳng ở đây và dừng lại, KHÔNG tự nghĩ ra nội dung.`;
+
+const SOURCE_EXTRACT_FORMAT = '- Phần nội dung rút ra từ nguồn bọc trong <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 text-sm space-y-2">, các danh sách dùng <ul class="pl-5 space-y-1">.';
+
+export const getPrompt = (
   mode: AnalysisMode,
-  userPrompt?: string, 
-  url?: string, 
+  userPrompt?: string,
+  url?: string,
   brand?: BrandProfile,
   additionalInstructions?: string,
   formula?: ScriptFormula,
   waterfall?: WaterfallOptions,
-  checklist?: string
+  checklist?: string,
+  sourceKinds: PromptSourceKind[] = []
 ): string => {
   const brandGuidelines = formatBrandGuidelines(brand);
   const formulaInstruction = getFormulaInstruction(formula);
@@ -468,43 +550,61 @@ const getPrompt = (
 
 
     case AnalysisMode.CONTENT_AUDIT:
-    case AnalysisMode.CONTENT_REMAKE:
+    case AnalysisMode.CONTENT_REMAKE: {
+      // "Remake" từng được định nghĩa là: học cấu trúc nguồn rồi thay toàn bộ
+      // nội dung bằng sản phẩm của thương hiệu. Kết quả là model bịa ra một câu
+      // chuyện thương hiệu không ai kể. Giờ remake nghĩa là: kể lại đúng nội
+      // dung nguồn bằng giọng thương hiệu. Muốn đổi nội dung thì người dùng
+      // phải nói rõ trong yêu cầu bổ sung.
+      const pasted = (userPrompt || '').trim();
+      const brief = (additionalInstructions || '').trim();
+
       return `
-      Dựa trên nguồn dữ liệu gốc (Văn bản / Link / Ảnh / Âm thanh), hãy PHÂN TÍCH và REMAKE lại thành một BÀI ĐĂNG MẠNG XÃ HỘI (Facebook/Threads/X/Instagram) mang trọn vẹn bản sắc thương hiệu ${brandLabel}.
+      Hãy VIẾT LẠI nội dung gốc dưới đây thành một BÀI ĐĂNG MẠNG XÃ HỘI (Facebook/Threads/X/Instagram) mang giọng văn và bản sắc của ${brandLabel}, nhưng giữ đúng nội dung của nguồn.
 
       ${brandGuidelines}
 
-      DỮ LIỆU ĐẦU VÀO:
-      - NỘI DUNG VĂN BẢN: "${userPrompt || '(Không có)'}"
-      - ĐƯỜNG DẪN LINK: "${url || '(Không có)'}"
+      =======================================================
+      📥 NGUỒN GỐC - ĐÂY LÀ CĂN CỨ DUY NHẤT CHO NỘI DUNG BÀI
+      =======================================================
+      ${describeSources({ sourceKinds, url, pastedText: pasted })}
+      ${sourceFidelityRules(brandLabel)}
 
-      YÊU CẦU REMAKE THEO 4 NGUYÊN TẮC BẮT BUỘC:
-      1. NGUYÊN TẮC REMAKE:
-         - Học theo: Cấu trúc mở bài (Hook), cách dẫn dắt tình huống, cách tạo cảm xúc/tò mò của bài mẫu.
-         - Thay đổi: Biến toàn bộ nội dung, câu chuyện, ví dụ và giải pháp thành sản phẩm/dịch vụ của ${brandLabel}. Tuyệt đối không sao chép nguyên văn câu chữ.
-      2. TONE & VOICE:
-         - Sắc thái: ${brand?.brandVoiceTone || 'Chân thành, tự nhiên, thu hút'}.
-         - Xưng hô: người nói xưng "${brandSpeaker}", gọi khán giả là "${brandAudience}".
-         - Ngôn ngữ: Tự nhiên, đúng ngữ cảnh ngành hàng, không hù dọa, không quá học thuật.
-      3. QUY TẮC AN TOÀN SẢN PHẨM:
-         - Chỉ sử dụng các claim, thành phần, công dụng có trong thông tin được cung cấp, không tự bịa đặt tính năng.
-      4. CẤU TRÚC CUỐI BÀI BẮT BUỘC:
+      ${sourceBriefRules('', brief)}
+
+      CÁCH LỒNG THƯƠNG HIỆU VÀO BÀI:
+      - Học từ nguồn: cách mở bài, cách dẫn dắt tình huống, nhịp điệu, cách tạo cảm xúc / tò mò - giữ lại những gì làm nguồn hiệu quả.
+      - Giọng văn: ${brand?.brandVoiceTone || 'Chân thành, tự nhiên, thu hút'}. Xưng hô: người nói xưng "${brandSpeaker}", gọi khán giả là "${brandAudience}". Ngôn ngữ tự nhiên, đúng ngữ cảnh ngành hàng, không hù dọa, không quá học thuật.
+      - Sản phẩm / dịch vụ của ${brandLabel} chỉ xuất hiện ở phần kết hoặc CTA, và chỉ với claim, thành phần, công dụng có trong thông tin thương hiệu ở trên. KHÔNG đổi câu chuyện, ví dụ, số liệu của nguồn thành của ${brandLabel} trừ khi người dùng yêu cầu rõ.
+      - CẤU TRÚC CUỐI BÀI BẮT BUỘC:
 ${brandFooter
-  ? `         Luôn kết thúc bài bằng CTA phù hợp, dải phân cách và đoạn Footer nguyên văn sau:
+  ? `        Luôn kết thúc bài bằng CTA phù hợp, dải phân cách và đoạn Footer nguyên văn sau:
 ━━━━━━━━━━━━━━
 ${brandFooter}`
-  : `         Luôn kết thúc bài bằng CTA phù hợp với thương hiệu${brandHashtags ? ` và bộ hashtag: ${brandHashtags}` : ''}. KHÔNG tự bịa link, hotline hay hashtag không được cung cấp.`}
+  : `        Luôn kết thúc bài bằng CTA phù hợp với thương hiệu${brandHashtags ? ` và bộ hashtag: ${brandHashtags}` : ''}. KHÔNG tự bịa link, hotline hay hashtag không được cung cấp.`}
 
-      ${extraReqs}
+      TRẢ VỀ ĐÚNG HAI PHẦN THEO THỨ TỰ:
 
-      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch với khung bài đăng mô phỏng mạng xã hội hiện đại chuẩn Light Theme, dùng đúng khung sau:
+      PHẦN 1 - NỘI DUNG RÚT RA TỪ NGUỒN
+      ${SOURCE_EXTRACT_SPEC}
+
+      PHẦN 2 - BÀI ĐĂNG HOÀN CHỈNH
+      Viết trọn bài, đăng được ngay không cần sửa. Trình bày như một bài đăng thật: xuống dòng thoáng, đoạn ngắn, emoji tiết chế, KHÔNG chèn tiêu đề phân tích vào giữa bài.
+      Mọi dữ kiện trong bài phải truy ngược được về PHẦN 1. Đọc lại bài trước khi trả: câu nào chứa thông tin không có trong nguồn thì bỏ câu đó.
+
+      YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch, dùng đúng khung sau:
 
       <div class="bg-white rounded-2xl p-5 border border-pink-200 shadow-sm text-slate-800">
+        <h4 class="font-bold text-pink-900 mb-2">📥 Nội dung rút ra từ nguồn</h4>
+        <div class="p-4 bg-pink-50 rounded-xl border border-pink-100 text-sm space-y-2 mb-4">
+          ... các mục của PHẦN 1, danh sách dùng <ul class="pl-5 space-y-1"> ...
+        </div>
         <h3 class="text-base font-bold text-pink-900 mb-4">📱 Bài đăng hoàn chỉnh</h3>
         <p class="text-sm leading-relaxed whitespace-pre-line">... toàn bộ nội dung bài đăng, giữ nguyên cách xuống dòng và emoji ...</p>
       </div>
       ${HTML_OUTPUT_RULES}
       `;
+    }
 
     case AnalysisMode.SCRIPT_GENERATION:
       return `
@@ -1100,21 +1200,52 @@ ${brandFooter}`
       `;
     }
 
-    case AnalysisMode.ARTICLE_WRITING:
+    case AnalysisMode.ARTICLE_WRITING: {
+      // Ba tình huống, ba cách viết khác hẳn nhau:
+      //  - chỉ có ý tưởng: mở ý tưởng ra thành bài, được tự thêm lập luận.
+      //  - có nguồn, không yêu cầu: kể lại đúng nguồn bằng lời thương hiệu.
+      //  - có nguồn và có yêu cầu: yêu cầu dẫn đường, nguồn là chất liệu.
+      // Gộp chung một prompt "tham khảo link" như trước thì model coi nguồn là
+      // gợi ý và tự bịa phần còn lại.
+      const idea = (userPrompt || '').trim();
+      const brief = (additionalInstructions || '').trim();
+      const hasSource = sourceKinds.length > 0 || !!url;
+      const hasBrief = !!idea || !!brief;
+
+      let n = 0;
+      const part = (title: string) => `PHẦN ${++n} - ${title}`;
+
+      const ideaOnlyBlock = `
+      Ý TƯỞNG CỦA NGƯỜI DÙNG: "${idea}"
+      ${brief ? `YÊU CẦU BỔ SUNG: "${brief}"` : ''}
+
+      QUAN TRỌNG: ý tưởng người dùng đưa thường chỉ là vài dòng. Việc của bạn là mở nó ra thành một bài đủ sâu, chứ không phải diễn đạt lại cho dài. Tự bổ sung góc nhìn, ví dụ, lập luận mà một người trong nghề sẽ nghĩ tới - miễn là không bịa số liệu.`;
+
+      const sourceBlock = `
+      =======================================================
+      📥 NGUỒN GỐC - ĐÂY LÀ CĂN CỨ DUY NHẤT CHO NỘI DUNG BÀI
+      =======================================================
+      ${describeSources({ sourceKinds, url })}
+      ${sourceFidelityRules(brandLabel)}
+
+      ${sourceBriefRules(idea, brief)}`;
+
+      const formulaNote = hasSource
+        ? ' Công thức chỉ quyết định cách sắp xếp và dẫn dắt. Nó KHÔNG cho phép thêm dữ kiện ngoài nguồn hay ép nhét sản phẩm thương hiệu vào chỗ nguồn không nói tới.'
+        : '';
+
       return `
-      Hãy viết một BÀI ĐĂNG HOÀN CHỈNH cho thương hiệu ${brandLabel}, xuất phát từ ý tưởng thô của người dùng dưới đây.
+      Hãy viết một BÀI ĐĂNG HOÀN CHỈNH cho thương hiệu ${brandLabel}.
+      ${hasSource ? sourceBlock : ideaOnlyBlock}
 
-      Ý TƯỞNG CỦA NGƯỜI DÙNG: "${userPrompt || '(Chưa dán ý tưởng - hãy lấy ý từ link hoặc ảnh đính kèm)'}"
-      ${url ? `- CHẤT LIỆU THAM KHẢO TỪ LINK: ${url}` : ''}
-      - ẢNH ĐÍNH KÈM (nếu có): đọc hết chữ trong ảnh và dùng làm chất liệu.
+      CÔNG THỨC TRIỂN KHAI: ${formulaInstruction}${formulaNote}
 
-      CÔNG THỨC TRIỂN KHAI: ${formulaInstruction}
-
-      QUAN TRỌNG: ý tưởng người dùng đưa thường chỉ là vài dòng. Việc của bạn là mở nó ra thành một bài đủ sâu, chứ không phải diễn đạt lại cho dài. Tự bổ sung góc nhìn, ví dụ, lập luận mà một người trong nghề sẽ nghĩ tới - miễn là không bịa số liệu.
-
-      TRẢ VỀ ĐÚNG BA PHẦN THEO THỨ TỰ:
-
-      PHẦN 1 - NĂM HOOK ĐỂ CHỌN
+      TRẢ VỀ ĐÚNG ${hasSource ? 'BỐN' : 'BA'} PHẦN THEO THỨ TỰ:
+      ${hasSource ? `
+      ${part('NỘI DUNG RÚT RA TỪ NGUỒN')}
+      ${SOURCE_EXTRACT_SPEC}
+      ` : ''}
+      ${part('NĂM HOOK ĐỂ CHỌN')}
       Viết 5 hook khác nhau cho cùng bài này, mỗi hook một DẠNG khác nhau để người dùng có cái mà cân:
       - Một hook chạm nỗi đau trực diện
       - Một hook mở bằng con số hoặc dữ kiện cụ thể
@@ -1122,26 +1253,30 @@ ${brandFooter}`
       - Một hook kể chuyện, mở bằng một khoảnh khắc
       - Một hook đặt câu hỏi khiến người đọc phải tự soi lại mình
       Với mỗi hook, thêm một dòng ngắn gọn nói rõ nó đánh vào tâm lý gì. Đánh dấu rõ hook nào bạn cho là mạnh nhất và vì sao.
+      ${hasSource ? 'Mỗi hook phải bám vào một chi tiết có thật trong nguồn. Hook con số chỉ được dùng số liệu nguồn có; nguồn không có số thì thay bằng một dạng hook khác và ghi rõ lý do.' : ''}
 
-      PHẦN 2 - BÀI VIẾT HOÀN CHỈNH
+      ${part('BÀI VIẾT HOÀN CHỈNH')}
       Dùng hook mạnh nhất vừa chọn để mở bài, rồi viết trọn bài, đăng được ngay không cần sửa. Đúng giọng ${brandLabel}. Kết bằng CTA tự nhiên.
       Trình bày như một bài đăng thật: xuống dòng thoáng, đoạn ngắn, emoji tiết chế. KHÔNG chèn tiêu đề phân tích kiểu "Thân bài", "Kết luận" vào giữa bài.
+      ${hasSource ? 'Mọi dữ kiện trong bài phải truy ngược được về phần NỘI DUNG RÚT RA TỪ NGUỒN. Đọc lại bài trước khi trả: câu nào chứa thông tin không có trong nguồn thì bỏ câu đó.' : ''}
 
-      PHẦN 3 - GHI CHÚ CHO NGƯỜI VIẾT
+      ${part('GHI CHÚ CHO NGƯỜI VIẾT')}
       Ngắn gọn thôi, để người dùng hiểu bài vừa viết đang chạy theo logic nào:
       - Công thức đã dùng và mạch cảm xúc dẫn dắt người đọc.
       - Các đòn bẩy tâm lý đã cài, nằm ở đoạn nào.
+      ${hasSource ? '- Đối chiếu nguồn: ý chính nào của nguồn đã vào bài; ý nào (nếu có) đã lược bỏ và vì sao.' : ''}
+      ${hasSource && hasBrief ? '- Chi tiết nào yêu cầu cần mà nguồn không có (nếu có).' : ''}
       - Vài hashtag phù hợp.
       - Một ghi chú về ảnh minh hoạ nên đi kèm.
 
-      ${extraReqs}
-
       YÊU CẦU ĐỊNH DẠNG: Trả về mã HTML sạch, bọc toàn bộ trong <div class="p-5 bg-white rounded-2xl border border-pink-200 shadow-sm text-slate-800">.
       - Mỗi phần mở đầu bằng <h4 class="font-bold text-pink-900">.
+      ${hasSource ? SOURCE_EXTRACT_FORMAT : ''}
       - Mỗi hook bọc trong <div class="p-3 bg-pink-50 rounded-lg border border-pink-100 mb-2">, chữ hook in đậm, dòng giải thích tâm lý để <span class="text-sm text-slate-500">.
       - Phần bài viết hoàn chỉnh bọc trong <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 whitespace-pre-line leading-relaxed"> để người dùng bôi đen copy được nguyên khối.
       ${HTML_OUTPUT_RULES}
       `;
+    }
 
     case AnalysisMode.ARTICLE_ANALYSIS:
       return `
@@ -1346,8 +1481,15 @@ export const analyzeContent = async (
     }
   }
 
+  const sourceKinds: PromptSourceKind[] = [];
+  if (fileUri || (base64Data && mimeType.startsWith('video'))) sourceKinds.push('video');
+  else if (base64Data && mimeType.startsWith('audio')) sourceKinds.push('audio');
+  else if (base64Data && mimeType.startsWith('image')) sourceKinds.push('image');
+  if (contextData) sourceKinds.push('text');
+  if (extraImages?.length) sourceKinds.push('images');
+
   const systemInstruction = getSystemInstruction(mode, brand);
-  let promptText = getPrompt(mode, userPrompt, url, brand, additionalInstructions, formula, waterfall, checklist);
+  let promptText = getPrompt(mode, userPrompt, url, brand, additionalInstructions, formula, waterfall, checklist, sourceKinds);
 
   if (videoMeta) {
     promptText += `\n\n${formatVideoMeta(videoMeta)}`;
@@ -1372,7 +1514,23 @@ Nhiều người sáng tạo đặt thông tin quan trọng nhất lên ảnh ch
     AnalysisMode.VIDEO_SCORING,
   ];
 
-  if (VIDEO_MODES.includes(mode) && !fileUri && !base64Data) {
+  // Những tính năng nhận cả bài viết lẫn video. Với chúng, thiếu file KHÔNG có
+  // nghĩa là hỏng - nguồn có thể vốn dĩ là một bài viết. Chỉ khi link trỏ tới
+  // một video mà file không về được thì mới phải cảnh báo, nếu không model sẽ
+  // dựng ra nội dung cho một video nó chưa từng xem.
+  const MIXED_SOURCE_MODES = [
+    AnalysisMode.CONTENT_AUDIT,
+    AnalysisMode.ARTICLE_WRITING,
+    AnalysisMode.ARTICLE_SCORING,
+    AnalysisMode.CONTENT_WATERFALL,
+  ];
+  const VIDEO_LINK_RE = /(youtube\.com|youtu\.be|tiktok\.com|douyin\.com|iesdouyin\.com|fb\.watch|\/reel|\/video|\/watch)/i;
+
+  const videoSourceMissing =
+    VIDEO_MODES.includes(mode) ||
+    (MIXED_SOURCE_MODES.includes(mode) && VIDEO_LINK_RE.test(url || ''));
+
+  if (videoSourceMissing && !fileUri && !base64Data) {
     promptText += `
 
 =======================================================
@@ -1381,9 +1539,11 @@ Nhiều người sáng tạo đặt thông tin quan trọng nhất lên ảnh ch
 Bạn KHÔNG hề xem được video. Tất cả những gì bạn có là: caption, số liệu tương tác, bình luận của người xem và ảnh bìa ở trên.
 
 BẮT BUỘC:
-- Mở đầu câu trả lời bằng một dòng nói rõ: phân tích dựa trên caption, ảnh bìa và bình luận, KHÔNG dựa trên nội dung video.
+- Mở đầu câu trả lời bằng một dòng nói rõ: chỉ dựa trên caption, ảnh bìa và bình luận, KHÔNG dựa trên nội dung video.
 - TUYỆT ĐỐI KHÔNG bịa mốc thời gian, lời thoại, cảnh quay, góc máy hay diễn biến hình ảnh trong video.
 - BỎ HẲN mọi bảng bóc tách kịch bản theo timeline. Thà thiếu còn hơn bịa.
+- Nếu nhiệm vụ là VIẾT LẠI hay TẠO NỘI DUNG MỚI: chỉ được triển khai từ thông tin có thật trong caption và bình luận. KHÔNG được tự nghĩ ra chi tiết, câu chuyện, số liệu hay luận điểm mà nguồn không hề nói tới.
+- Nếu dữ liệu thật quá ít để làm ra một bài tử tế, hãy nói thẳng là nguồn không đủ và đề nghị người dùng tải file lên hoặc dán nội dung, thay vì viết bừa cho đủ chữ.
 - Chỉ nêu những gì suy ra được từ dữ liệu thật đang có.
 =======================================================`;
   }
@@ -1418,7 +1578,9 @@ QUAN TRỌNG: Nếu không tìm được dữ liệu thật về nội dung vide
     parts: [...parts, { text: promptText }],
     systemInstruction,
     temperature: 0.7,
-    useSearch: !contextData && (mode === AnalysisMode.CONTENT_AUDIT || needsWebLookup),
+    // Search only when the model was handed nothing. With a video or the page
+    // text attached it just tempts the model to blend in unrelated material.
+    useSearch: needsWebLookup,
   });
 
   return cleanResponse(payload.text);

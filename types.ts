@@ -52,7 +52,100 @@ export interface ScoringChecklist {
   updatedAt: number;
 }
 
+// ---------------------------------------------------------------------------
+// Carousel Studio
+//
+// Bộ nhận diện hình ảnh của một thương hiệu, tách hẳn khỏi BrandProfile: cái kia
+// mô tả cách thương hiệu NÓI, cái này mô tả cách nó NHÌN. Trộn chung thì mỗi lần
+// đổi màu lại phải mở form giọng văn.
+
+/** Một nền carousel đã dựng sẵn - "nền A", "nền B" người dùng chọn khi làm ảnh. */
+export interface CarouselTemplate {
+  id: string;
+  name: string;
+  /** Ảnh nền 1080x1080, nhúng dạng data URI để không phụ thuộc file trên đĩa. */
+  backgroundDataUrl: string;
+  note?: string;
+}
+
+export interface CarouselFont {
+  family: string;
+  dataUrl: string;
+}
+
+export interface CarouselKit {
+  id: string;
+  name: string;
+  templates: CarouselTemplate[];
+  fonts: CarouselFont[];
+  titleFont: string;
+  bodyFont: string;
+  titleGradientFrom: string;
+  titleGradientTo: string;
+  accentColor: string;
+  bodyColor: string;
+  footColor: string;
+  ruleColor: string;
+  frameColor: string;
+  /**
+   * Màu phụ người dùng tự thêm - màu thương hiệu nào không rơi vào sáu vai trò
+   * cố định ở trên thì cất ở đây, để lúc dán mã hex vào ô còn có chỗ tra.
+   */
+  extraColors?: { id: string; name: string; value: string }[];
+  /** Quy tắc thiết kế dán vào, dùng khi nhờ AI chia slide. */
+  guideline: string;
+  updatedAt: number;
+}
+
+/**
+ * Cách xếp chữ và ảnh trên một slide.
+ *
+ * Chỉ co ảnh cho vừa chỗ thừa là cách xử lý máy móc: slide nhiều chữ sẽ ép ảnh
+ * xuống còn con tem. Bố cục phải đổi theo lượng chữ và theo chính tấm ảnh.
+ *  - 'stack': chữ trên, ảnh dưới. Hợp khi chữ ít và ảnh ngang.
+ *  - 'side' : chữ trái, ảnh phải. Cứu được slide nhiều chữ mà vẫn cần ảnh to.
+ *  - 'hero' : ảnh chiếm phần lớn slide, chữ chỉ còn tiêu đề và một câu.
+ *  - 'grid' : nhiều ảnh xếp lưới.
+ */
+export type CarouselLayout = 'stack' | 'side' | 'hero' | 'grid';
+
+export interface CarouselSlide {
+  id: string;
+  /** Bỏ trống thì tự suy ra từ số ảnh; AI dàn trang sẽ ghi đè trường này. */
+  layout?: CarouselLayout;
+  /** Vì sao AI chọn bố cục đó - hiện cho người dùng, không đưa vào ảnh. */
+  layoutNote?: string;
+  /** Mỗi dòng một span; xuống dòng để tách dòng tiêu đề. */
+  title: string;
+  lead?: string;
+  bullets: string[];
+  foot?: string;
+  /**
+   * Nhiều ảnh minh hoạ cho một slide; khung tự chia chỗ theo số lượng.
+   * `align` chỉnh riêng từng ảnh - trong cùng một slide có ảnh muốn dạt trái,
+   * ảnh khác lại muốn nằm giữa, nên đặt ở mức slide là không đủ.
+   */
+  images?: { dataUrl: string; name: string; align?: 'left' | 'center' | 'right' }[];
+  /** Bộ cũ chỉ có một ảnh - giữ lại để deck đã soạn dở không mất ảnh. */
+  imageDataUrl?: string;
+  imageName?: string;
+  /** Đè nền của template cho riêng slide này. */
+  backgroundDataUrl?: string;
+}
+
+export interface CarouselDeck {
+  name: string;
+  templateId: string;
+  slides: CarouselSlide[];
+}
+
+/** Khoảng trống dưới đáy mỗi slide, đo sau khi dựng. Đích là 0..60. */
+export interface CarouselRhythm {
+  freeBottom: number | null;
+}
+
 export interface AnalysisResult {
+
   markdown: string;
   timestamp: Date;
 }

@@ -76,7 +76,7 @@ export const CommunityPanel: React.FC = () => {
 
   return (
     <div className="max-w-5xl pb-10">
-      <h1 className="text-[40px] leading-tight font-bold text-slate-900">Cộng đồng &amp; Hỗ trợ</h1>
+      <h1 className="text-[26px] sm:text-[40px] leading-tight font-bold text-slate-900">Cộng đồng &amp; Hỗ trợ</h1>
       <p className="mt-3 text-[15px] text-slate-600">
         Nơi học cách dùng app hiệu quả hơn, và tìm mình khi bạn cần.
       </p>
@@ -87,7 +87,7 @@ export const CommunityPanel: React.FC = () => {
           {!!skool.banner && (
             <img src={skool.banner} alt={skool.name} className="w-full aspect-[16/9] object-cover" />
           )}
-          <div className="p-8">
+          <div className="p-5 sm:p-8">
             <div className="flex items-center gap-3">
               <XmaiLogo className="w-11 h-11 shrink-0 ring-1 ring-slate-900/10 rounded-[10px]" />
               <div>
@@ -110,7 +110,7 @@ export const CommunityPanel: React.FC = () => {
           hai chỗ rời rạc trên trang chỉ bắt người đọc phải tìm hai lần. */}
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {!!booking.url && (
-          <div className="rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-8 flex flex-col">
+          <div className="rounded-3xl border-2 border-[#A4145E] bg-gradient-to-br from-[#FDF2F7] to-white p-5 sm:p-8 flex flex-col">
             <span className="w-12 h-12 rounded-2xl bg-[#A4145E] flex items-center justify-center shrink-0">
               <CalendarCheck className="w-6 h-6 text-white" />
             </span>
@@ -126,7 +126,7 @@ export const CommunityPanel: React.FC = () => {
         )}
 
         {hasContact && (
-          <div className="rounded-3xl border-2 border-slate-200 bg-white p-8">
+          <div className="rounded-3xl border-2 border-slate-200 bg-white p-5 sm:p-8">
             <h2 className="text-xl font-bold text-slate-900">Liên hệ</h2>
             <p className="mt-1 text-[15px] text-slate-600">Nhắn mình qua kênh nào tiện nhất với bạn.</p>
 
@@ -170,7 +170,7 @@ export const CommunityPanel: React.FC = () => {
 
       {/* Hướng dẫn sử dụng */}
       {!!guide.url && (
-        <div className="mt-6 rounded-3xl border-2 border-slate-200 bg-white p-8 flex flex-col sm:flex-row sm:items-center gap-6">
+        <div className="mt-6 rounded-3xl border-2 border-slate-200 bg-white p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-6">
           <span className="w-12 h-12 rounded-2xl bg-[#A4145E] flex items-center justify-center shrink-0">
             <PlayCircle className="w-6 h-6 text-white" />
           </span>
@@ -202,13 +202,13 @@ export const CommunityPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col md:flex-row gap-8 items-start">
+          <div className="mt-6 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
             {!!donate.qrImage && (
               <div className="shrink-0 mx-auto md:mx-0">
                 <img
                   src={donate.qrImage}
                   alt="Mã QR chuyển khoản"
-                  className="w-72 rounded-2xl border-2 border-slate-200 bg-white shadow-lg"
+                  className="w-full max-w-[288px] sm:w-72 rounded-2xl border-2 border-slate-200 bg-white shadow-lg"
                 />
               </div>
             )}

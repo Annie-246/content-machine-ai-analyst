@@ -61,8 +61,8 @@ export const OverviewIntro: React.FC<{
   onOpenBrand: () => void;
 }> = ({ brandName, onNavigate, onOpenBrand }) => (
   <>
-    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-8">
-      <p className="text-[17px] text-slate-700 leading-relaxed max-w-3xl">
+    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 sm:p-8">
+      <p className="text-[15px] sm:text-[17px] text-slate-700 leading-relaxed max-w-3xl">
         Content Machine là hệ thống do team Nhật Dương xây dựng để hỗ trợ đội ngũ sản xuất nội dung.
         Hệ thống đọc những nội dung đang hiệu quả ngoài kia - video, bài đăng, bình luận của người
         xem - rồi dựng lại thành video và bài viết mang đúng giọng, đúng bản sắc thương hiệu của bạn.
@@ -88,7 +88,7 @@ export const OverviewIntro: React.FC<{
           <button
             key={f.id}
             onClick={() => onNavigate(f.id)}
-            className={`text-left rounded-2xl border-2 border-slate-200 bg-white p-6 transition-all hover:shadow-md ${f.tint} group`}
+            className={`text-left rounded-2xl border-2 border-slate-200 bg-white p-5 sm:p-6 transition-all hover:shadow-md ${f.tint} group`}
           >
             <div className="flex items-center gap-3">
               <span className={`w-10 h-10 rounded-xl ${f.iconBg} flex items-center justify-center shrink-0`}>
