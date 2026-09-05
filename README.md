@@ -6,15 +6,22 @@ bóc tách kịch bản, phân tích bài viết và tạo nội dung mới theo
 App **không gắn với thương hiệu nào**. Lần đầu mở, bạn tạo Brand DNA của riêng mình; mọi prompt gửi cho AI
 đều sinh ra từ hồ sơ đó. Có thể tạo nhiều thương hiệu và chuyển qua lại trong cùng một bản cài đặt.
 
-## Tải app Windows
+## Tải app Windows và bắt đầu
 
 Bản đóng gói sẵn nằm ở trang [Releases](https://github.com/Annie-246/content-machine-ai-analyst/releases/latest),
-không cần cài Node.js:
+không cần cài Node.js.
 
-- `Content Machine Setup <phiên bản>.exe`: bản cài đặt, có shortcut.
-- `Content Machine <phiên bản>.exe`: bản chạy ngay, không cần cài.
-
-Máy vẫn cần `yt-dlp` để tải video (xem bảng bên dưới) và Chrome hoặc Edge để Carousel Studio dựng ảnh.
+1. **Tải**: kéo xuống mục *Assets*, bấm `Content.Machine.Setup.<phiên bản>.exe` (bản cài đặt, có shortcut)
+   hoặc `Content.Machine.<phiên bản>.exe` (chạy ngay, không cần cài). Trình duyệt hỏi giữ file thì chọn *Keep*.
+2. **Mở**: Windows hiện "Windows protected your PC" vì app chưa có chữ ký số. Bấm *More info* rồi *Run anyway*.
+   Bản Setup thì *Next* → *Install*.
+3. **Brand DNA**: lần đầu mở, app hỏi về thương hiệu của bạn. Chọn *Tạo mới từ đầu*, *Dùng preset mẫu* hoặc *Nhập file JSON*.
+4. **API key**: lấy key Gemini miễn phí tại https://aistudio.google.com/apikey, vào mục **Tích hợp** ở menu trái, dán vào ô
+   Google Gemini rồi *Lưu*. Key chỉ lưu trên máy bạn.
+5. **Dùng**: *Content Creator* để viết và remake bài; *Carousel Studio* để dựng bộ ảnh 1080x1080 (tải nền, font và bộ quy
+   tắc của bạn ở tab *Bộ nhận diện* trước; máy cần Chrome hoặc Edge).
+6. **Tuỳ chọn, cho các tính năng video**: cài Python (tick *Add python.exe to PATH*) rồi chạy
+   `pip install -U "yt-dlp[default,curl-cffi]"` trong Command Prompt, mở lại app.
 
 ## Yêu cầu hệ thống
 
